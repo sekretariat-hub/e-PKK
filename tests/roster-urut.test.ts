@@ -28,3 +28,10 @@ describe("seksi ber-urut", () => {
     expect(html).toContain('var URUT_SEKSI = ["Forkom 2", "Alpha / TMCE"];');
   });
 });
+
+describe("popup Umat: jabatan di BPK", () => {
+  it("memakai jabatan pengurus periode aktif, kolom manual hanya cadangan", () => {
+    const html = readFileSync("docs/prototipe-artifact.html", "utf8");
+    expect(html).toContain('esc(jabA.length ? jabA.join(", ") : one(v[PV.jabBpk]))');
+  });
+});
