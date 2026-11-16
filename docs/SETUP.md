@@ -20,3 +20,15 @@
 - Token Airtable harus punya akses ke base tersebut (lihat langkah 2).
 - Sebelum bisa diberikan ke pengguna, tambahkan satu opsi bernama **Keuangan** pada field multi-select "Tab diizinkan" di tabel "Pengguna Dashboard" (base BPK Bandung). Setelah itu centang per pengguna (bendahara, koordinator BPK, Sekjen) lewat Kelola Pengguna atau langsung di Airtable.
 - Transaksi yang dicentang "Hapus" di Airtable tidak dihitung. Nomor rekening bank tidak dikirim ke browser (hanya "Nama (Bank)").
+
+## WhatsApp persetujuan (e-pkk-beta dan produksi)
+Setiap permintaan persetujuan juga dikirim lewat WhatsApp (BaBlast) ke pemegang akun yang harus memutuskan, memuat link langsung ke e-PKK. Lonceng tetap ada.
+- **Penerima**: pengguna baru → Sekretariat dan Sekretaris; program kerja baru → Sekretaris Jenderal (pemutus tahap saat ini); permohonan pewarta luar kota → Sekretaris Jenderal; SEP/KEP baru dari PIC paroki → Tim SEP BPK (kegiatan berstatus "Menunggu Persetujuan" dan link pendaftarannya mati sampai disetujui). Pendaftar peserta SEP tidak memicu WA.
+- **Environment variables yang wajib terisi** (Vercel, lalu Redeploy):
+  - `BABLAST_API_KEY` (opsional `BABLAST_SENDER_CODE`, `BABLAST_API_URL`): tanpa ini WA tidak terkirim dan email peringatan dikirim.
+  - `SMTP_USER` dan `SMTP_PASS`: dipakai juga untuk email peringatan bila WA gagal.
+  - `HOOK_SECRET`: secret acak (mis. `openssl rand -base64 32`) untuk webhook `POST /api/hook/luar-kota`. Kosong = webhook menolak semua panggilan.
+- **Bila pengiriman WA gagal** (WA apa pun: OTP login, Administrasi, permintaan persetujuan), e-PKK mengirim email ke Sekretaris, Koordinator BPK, dan Sekjen agar sistem WA dicek. Paling banyak satu email per jam per jenis kegagalan; nomor dan API key disamarkan.
+- **Webhook pewarta luar kota**: ubah automation Airtable "e-PKK: email Sekjen saat ada permohonan pewarta luar kota baru" agar memanggil `POST https://<domain>/api/hook/luar-kota` dengan header `x-webhook-secret: <HOOK_SECRET>` dan body `{"eventId":"<id rekaman permohonan>"}`. Uji dulu ke nomor sendiri, laporkan, baru aktifkan.
+- **Keamanan**: jangan menyimpan token gateway WA di skrip Airtable. Simpan di secret, dan buat ulang token lama.
+- **Skema Airtable**: satu-satunya perubahan adalah opsi baru "Menunggu Persetujuan" pada field Status SEP (tabel SEP Kegiatan), dibuat otomatis saat ada SEP baru dari PIC paroki.

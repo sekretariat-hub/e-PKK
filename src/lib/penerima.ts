@@ -21,7 +21,7 @@ async function akunDisetujui(): Promise<Akun[]> {
     const u = Array.isArray(f[AF.umat]) ? f[AF.umat][0] : "";
     return {
       email: String(f[AF.email] || "").trim().toLowerCase(),
-      jabatan: jabatanOf(f).split(",").map((j) => j.trim()).filter(Boolean),
+      jabatan: String(jabatanOf(f)).split(",").map((j: string) => j.trim()).filter(Boolean),
       sepPeran: String(f[AF.sepPeran] || ""),
       umatId: typeof u === "string" ? u : String(u?.id || ""),
     };
