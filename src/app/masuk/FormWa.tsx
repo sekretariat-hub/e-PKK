@@ -13,6 +13,22 @@ async function api(body: object) {
   return j;
 }
 
+function Sandi({ id, value, onChange, auto, fokus, min }: { id: string; value: string; onChange: (v: string) => void; auto: string; fokus?: boolean; min?: number }) {
+  const [lihat, setLihat] = useState(false);
+  return (
+    <div className={s.sandi}>
+      <input id={id} className={s.inp} type={lihat ? "text" : "password"} autoComplete={auto} minLength={min} value={value} onChange={(e) => onChange(e.target.value)} required autoFocus={fokus} />
+      <button type="button" className={s.mata} aria-label={lihat ? "Sembunyikan password" : "Tampilkan password"} aria-pressed={lihat} onClick={() => setLihat(!lihat)}>
+        {lihat ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24M1 1l22 22" /></svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+        )}
+      </button>
+    </div>
+  );
+}
+
 export default function FormWa({ dest }: { dest: string }) {
   const [langkah, setLangkah] = useState<Langkah>("nomor");
   const [wa, setWa] = useState(""), [pw, setPw] = useState(""), [pw2, setPw2] = useState(""), [kode, setKode] = useState(""), [token, setToken] = useState("");
@@ -54,7 +70,7 @@ export default function FormWa({ dest }: { dest: string }) {
         <form onSubmit={(e) => { e.preventDefault(); jalan(() => masuk(pw)); }}>
           <p className={s.sub}>Masuk sebagai <b>{wa}</b></p>
           <label className={s.lbl} htmlFor="pw">Password</label>
-          <input id="pw" className={s.inp} type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} required autoFocus />
+          <Sandi id="pw" value={pw} onChange={setPw} auto="current-password" fokus />
           <button className={s.btn} disabled={sibuk}>{sibuk ? "Masuk…" : "Masuk"}</button>
           <button type="button" className={s.link} onClick={() => jalan(() => kirimKode(false))}>Lupa password? Kirim kode ke WhatsApp</button>
           <button type="button" className={s.link} onClick={() => { setLangkah("nomor"); setErr(""); setPw(""); }}>Ganti nomor</button>
@@ -79,9 +95,9 @@ export default function FormWa({ dest }: { dest: string }) {
         }); }}>
           <p className={s.sub}>Kode benar. Buat password untuk masuk berikutnya (minimal 8 karakter).</p>
           <label className={s.lbl} htmlFor="pw">Password baru</label>
-          <input id="pw" className={s.inp} type="password" autoComplete="new-password" minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} required autoFocus />
+          <Sandi id="pw" value={pw} onChange={setPw} auto="new-password" min={8} fokus />
           <label className={s.lbl} htmlFor="pw2">Ulangi password</label>
-          <input id="pw2" className={s.inp} type="password" autoComplete="new-password" minLength={8} value={pw2} onChange={(e) => setPw2(e.target.value)} required />
+          <Sandi id="pw2" value={pw2} onChange={setPw2} auto="new-password" min={8} />
           <button className={s.btn} disabled={sibuk}>{sibuk ? "Menyimpan…" : "Simpan dan masuk"}</button>
         </form>
       )}
