@@ -259,7 +259,9 @@ describe("event live dan tombol Buka", () => {
 describe("link absensi di mode Lihat sebagai", () => {
   it("tombol dinonaktifkan dengan keterangan, bukan menampilkan galat", () => {
     const html = require("node:fs").readFileSync("docs/prototipe-artifact.html", "utf8");
-    expect(html).toContain('window.__ME__.viewAs);\n  h += \'<p><button type="button" class="chip" data-absen="');
+    expect(html).toContain('window.__ME__.viewAs);');
+    expect(html).toContain('<button type="button" class="chip" data-absen="');
+    expect(html).toContain('(va ? " disabled" : "")');
     expect(html).toContain("Tidak tersedia di mode Lihat sebagai");
   });
 });

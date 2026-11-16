@@ -457,6 +457,24 @@ header p { font-size: 13px; }
 .fil input[type="search"]:focus, .fil select:focus, .dlg input:focus, .dlg textarea:focus, .dlg select:focus { outline: 2px solid var(--navy); outline-offset: 0; border-color: transparent; }
 .dlg { border-radius: var(--r); }
 .tabs:not(.side) .tabbtn[aria-selected="true"], .rtabs .tabbtn[aria-selected="true"] { color: var(--navy); border-bottom: 3px solid var(--navy); }
+/* ===== Halaman detail event: ringkas dengan tab ===== */
+.evhead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 16px; }
+.evhead h3 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.01em; color: var(--navy); }
+.evact { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.evdetail .tiles.sm { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.evdetail .tiles.sm .tile { padding: 12px 14px; } .evdetail .tiles.sm .tile b { font-size: 1.8rem; } .evdetail .tiles.sm .tile::after { display: none; }
+.evtabs { display: flex; gap: 4px; padding: 4px; background: var(--accent-soft); border-radius: 14px; overflow-x: auto; width: fit-content; max-width: 100%; }
+.evtabs button { font: inherit; font-size: 13.5px; font-weight: 600; color: var(--muted); background: none; border: 0; border-radius: 10px; padding: 8px 14px; cursor: pointer; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.evtabs button em { font-style: normal; font-size: 12px; background: var(--surface); color: var(--navy); border-radius: 999px; padding: 1px 8px; }
+.evtabs button[aria-selected="true"] { background: var(--surface); color: var(--navy); box-shadow: var(--sh); }
+.evpane { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh); padding: 16px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.evpane[hidden] { display: none; }
+.evpane .hint { margin: 0; color: var(--muted); font-size: 13px; }
+.evpane .dgrid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.evpane .pan { border: 0; box-shadow: none; padding: 0; }
+#evRegs .tw, .evpane[data-evpane="pd"] .tw { max-height: 60vh; overflow: auto; }
+#evRegs thead th, .evpane[data-evpane="pd"] thead th { position: sticky; top: 0; background: var(--surface); }
+@media (max-width: 700px) { .evdetail .tiles.sm { grid-template-columns: repeat(3, minmax(0, 1fr)); } .evdetail .tiles.sm .tile small { display: none; } }
 </style>
 
 <div class="wrap">
@@ -2281,7 +2299,7 @@ function nav(spec) {
   else if (k === "pw") { pw.view = v; goTab("pewarta"); renderPewarta(); }
   else if (k === "pwf") { var kv = v.split("|"); pwFilterGo(kv[0], kv.slice(1).join("|")); }
   else if (k === "cal") { var m = v.split("-"); cal.y = +m[0]; cal.m = +m[1] - 1; goTab("kalender"); }
-  else if (k === "evt") { EV.sel = v; EV.waktu = "all"; EV.open = true; EV.dim = -1; EV.dv = ""; EV.pdf = ""; EV.rq = ""; goTab("event"); renderEvent(); }
+  else if (k === "evt") { EV.sel = v; EV.waktu = "all"; EV.open = true; EV.tab = "daftar"; EV.dim = -1; EV.dv = ""; EV.pdf = ""; EV.rq = ""; goTab("event"); renderEvent(); }
   else if (k === "dash" && v === "appr") openApprAdmin(document.activeElement);
   else if (k === "dash") openDash(v, document.activeElement);
   else if (k === "evd") { goTab("kalender"); openEv(v, null); }
@@ -3179,7 +3197,7 @@ document.getElementById("uaBody").addEventListener("click", function (e) {
 var T_PEND = "tbltiJ1qDJEwfWPLg";
 var PF = { ev: "flduf15moMpZSklGL", nama: "fld9ucFxEU0cUSHWw", pd: "fldMBf67dQxv51kY1", dek: "fldAZzqERt3oFHRRx", jk: "fldylW3JpqB1DJ0Fh", usia: "fldArgqtlZOnnRIvX", nikah: "fldmecbafGeLtqCSd", kat: "fldIgnkqdrDPz8gCV", st: "fldNGGEcwHqIsQPct", val: "fldqB6h9rzzC5VhKI", inap: "fldCqIqQmVnFXqrOU", hadir: "fldcpfpO2QvPGmgd7" };
 var EVX = { nama: "fld0d9tIyi4nyTZsM", tgl: "fldoIkx9wLMaKOa38", st: "fldHs8NnkUlEXDqLy", reg: "fldUqEnDI4GCqdwAk", jenis: "fldrYLgd8LCDjwmLZ", kel: "fldhgv2WlvqytF6zA", lokasi: "fldY0qw1v0a4fK9Sp", link: "fldyZyxxhZXUjhrqa", msg: "fldbLYDWk87mIC9yV", pic: "fldROaJ8rPAZQPTED", telp: "fld4qestIo5EjWAvk" };
-var EV = { limit: 10, sel: "", waktu: "next", q: "", pdf: "", rq: "", open: false, dim: -1, dv: "", want: "", msg: "" };
+var EV = { tab: "daftar", limit: 10, sel: "", waktu: "next", q: "", pdf: "", rq: "", open: false, dim: -1, dv: "", want: "", msg: "" };
 SRC_LABEL.evx = "Event"; SRC_LABEL.pend = "Pendaftaran event";
 function loadEvx() {
   return fetchAll(BASE, T_EVENTS, Object.keys(EVX).map(function (k) { return EVX[k]; })).then(function (recs) {
@@ -3654,37 +3672,53 @@ function renderEvDetail(e, regs) {
   var done = pdActive.filter(function (p) { return perPd[pdKey(p.nama)]; }), miss = pdActive.filter(function (p) { return !perPd[pdKey(p.nama)]; });
   var bayar = regs.filter(function (p) { return /paid|confirm/i.test(p.st); }).length, vald = regs.filter(function (p) { return p.val; }).length;
   var batal = D.pend.filter(function (p) { return p.ev === e.id && !pAktif(p); }).length;
-  var h = '<h3>' + esc(e.nama.replace(/^\d{6}-/, "")) + '</h3><p class="sub">' + esc(fmtDate(e.tgl, { weekday: "long", day: "numeric", month: "long", year: "numeric" })) + (e.lokasi ? " · " + esc(e.lokasi) : "") + "</p>";
-  if (e.tgl === TODAY) h += '<p><span class="tag live" data-live-b="' + esc(e.id) + '">● Live</span></p>';
+  var tab = EV.tab || "daftar";
+  var h = '<div class="evhead"><div><h3>' + esc(e.nama.replace(/^\d{6}-/, "")) + '</h3><p class="sub">' + esc(fmtDate(e.tgl, { weekday: "long", day: "numeric", month: "long", year: "numeric" })) + (e.lokasi ? " · " + esc(e.lokasi) : "") + "</p></div>";
   var va = !!(window.__ME__ && window.__ME__.viewAs);
-  h += '<p><button type="button" class="chip" data-absen="' + esc(e.id) + '"' + (va ? " disabled" : "") + '>Link absensi kehadiran</button> <span class="note" id="absenMsg">' + (va ? "Tidak tersedia di mode Lihat sebagai. Kembali ke akun Anda untuk membuat link." : "") + "</span></p>";
-  h += '<p><button type="button" class="chip" data-seksi="' + esc(e.id) + '|' + (e.tgl < TODAY ? "hadir" : "daftar") + '">Laporan perwakilan per seksi</button></p><div id="evSeksi"></div>';
-  h += '<div class="tiles">' + tile(regs.length, "Pendaftar aktif", batal ? batal + " batal / dobel daftar tidak dihitung" : "") + tile(done.length, "PD sudah mendaftar", "dari " + pdActive.length + " PD aktif") + tile(miss.length, "PD belum mendaftar", "belum ada satu pun pendaftar") + tile(bayar, "Confirmed / Paid", "validasi bendahara: " + vald) + "</div>";
+  h += '<div class="evact">' + (e.tgl === TODAY ? '<span class="tag live" data-live-b="' + esc(e.id) + '">● Live</span>' : "") +
+    '<button type="button" class="chip" data-absen="' + esc(e.id) + '"' + (va ? " disabled" : "") + '>Link absensi</button></div></div>' +
+    '<p class="note" id="absenMsg">' + (va ? "Tidak tersedia di mode Lihat sebagai. Kembali ke akun Anda untuk membuat link." : "") + "</p>";
+  h += '<div class="tiles sm">' + tile(regs.length, "Pendaftar", batal ? batal + " batal tidak dihitung" : "aktif") + tile(done.length + "/" + pdActive.length, "PD mendaftar", miss.length + " PD belum") + tile(bayar, "Confirmed / Paid", "divalidasi: " + vald) + "</div>";
+  var tabs = [["daftar", "Pendaftar", regs.length], ["demo", "Demografi"], ["pd", "Per PD", done.length], ["belum", "Belum mendaftar", miss.length], ["seksi", "Per seksi"]];
+  h += '<div class="evtabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-evtab="' + t[0] + '"' + (t[0] === "seksi" ? ' title="Laporan perwakilan per seksi"' : "") + ' aria-selected="' + (tab === t[0]) + '">' + t[1] + (t[2] !== undefined ? " <em>" + t[2] + "</em>" : "") + "</button>"; }).join("") + "</div>";
+  var pane = function (k, inner) { return '<div class="evpane" data-evpane="' + k + '"' + (tab === k ? "" : " hidden") + ">" + inner + "</div>"; };
   var rows = done.map(function (p) { return { n: p.nama, d: p.dekanat, l: perPd[pdKey(p.nama)] }; });
   Object.keys(other).forEach(function (k) { rows.push({ n: k, d: "(di luar daftar PD aktif)", l: other[k] }); });
   rows.sort(function (a, b) { return b.l.length - a.l.length || cmpId(a.n, b.n); });
-  h += '<div class="pan"><h4>Per PD <small class="note">· klik baris untuk melihat nama pendaftar</small></h4><div class="tw"><table class="tbl"><thead><tr><th>PD / Komunitas</th><th>Dekanat</th><th class="num">Pendaftar</th></tr></thead><tbody>';
-  h += rows.map(function (r) { return '<tr class="clk" data-prow tabindex="0" aria-expanded="false"><td>▸ ' + esc(r.n) + "</td><td>" + esc(r.d.replace(/^Dekanat /, "")) + '</td><td class="num">' + r.l.length + '</td></tr><tr class="det" hidden><td colspan="3">' + personTags(r.l) + "</td></tr>"; }).join("") + "</tbody></table></div></div>";
-  h += '<div class="pan"><h4>PD aktif yang belum mendaftar (' + miss.length + ') <small class="note">· ikon WA mengirim info event dan ajakan mendaftar ke koordinator</small></h4>' +
-    (miss.length ? '<div class="pdw">' + miss.map(function (p, i) {
-      var num = waNumber(p.koorWa), name = esc(p.nama);
-      var wa = num ? '<a class="act wa" href="https://wa.me/' + num + "?text=" + encodeURIComponent(EVMSG(e, p)) + '" target="_blank" rel="noopener" aria-label="Kirim WA ke koordinator ' + name + '" title="WA koordinator' + (p.koor ? ": " + esc(p.koor.replace(/\s+/g, " ")) : "") + '">' + ICON_WA + "</a>" : '<button type="button" class="act" disabled title="Nomor WA koordinator belum ada" aria-label="Nomor WA koordinator ' + name + ' belum ada">' + ICON_WA + "</button>";
-      return '<span class="pdi"><span>' + name + "</span>" + wa + "</span>";
-    }).join("") + "</div>" : '<p class="note">Semua PD aktif sudah ada pendaftarnya.</p>') + "</div>";
   var dekOf = function (p) { var x = keyOf[pdKey(p.pd)]; return ((x ? x.dekanat : p.dek) || "").replace(/^Dekanat /, ""); };
   var dims = [
     ["Jenis kelamin", function (p) { return p.jk; }], ["Kelompok usia", function (p) { return ageLbl(p.usia); }, function (a, b) { return ageNum(a) - ageNum(b); }],
     ["Status pernikahan", function (p) { return p.nikah; }], ["Kategori kepesertaan", function (p) { return p.kat; }], ["Menginap", function (p) { return p.inap; }],
     ["Status pendaftaran", function (p) { return p.st; }], ["Validasi bendahara", function (p) { return p.val ? "Sudah divalidasi" : "Belum divalidasi"; }], ["Dekanat", dekOf]];
   el._dims = dims;
-  h += '<div class="pan"><h4>Data demografis pendaftar <small class="note">· klik batang untuk menyaring daftar pendaftar di bawah</small></h4><div class="dgrid">' + dims.map(function (d, i) { return hbars(d[0], tally(regs, function (p) { return d[1](p) || "Belum diisi"; }), d[2], i); }).join("") + '</div></div>';
   var pdNames = uniq(regs.map(function (p) { return p.pd; })).sort(cmpId);
-  h += '<div class="pan" id="evRegsPan"><h4>Daftar pendaftar</h4><div id="evDimChip"></div><div class="fil"><input type="search" id="evRq" placeholder="Cari nama" autocomplete="off" aria-label="Cari pendaftar" value="' + esc(EV.rq) + '"><select id="evPd" aria-label="Filter PD"><option value="">Semua PD</option>' +
-    pdNames.map(function (n) { return '<option value="' + esc(n) + '"' + (n === EV.pdf ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("") + '</select></div><div id="evRegs"></div></div>';
+  h += pane("daftar", '<div id="evDimChip"></div><div class="fil"><input type="search" id="evRq" placeholder="Cari nama pendaftar" autocomplete="off" aria-label="Cari pendaftar" value="' + esc(EV.rq) + '"><select id="evPd" aria-label="Filter PD"><option value="">Semua PD</option>' +
+    pdNames.map(function (n) { return '<option value="' + esc(n) + '"' + (n === EV.pdf ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("") + '</select></div><div id="evRegs"></div>');
+  h += pane("demo", '<p class="hint">Klik batang untuk menyaring daftar pendaftar.</p><div class="dgrid">' + dims.map(function (d, i) { return hbars(d[0], tally(regs, function (p) { return d[1](p) || "Belum diisi"; }), d[2], i); }).join("") + "</div>");
+  h += pane("pd", '<p class="hint">Klik baris untuk melihat nama pendaftar.</p><div class="tw"><table class="tbl"><thead><tr><th>PD / Komunitas</th><th>Dekanat</th><th class="num">Pendaftar</th></tr></thead><tbody>' +
+    rows.map(function (r) { return '<tr class="clk" data-prow tabindex="0" aria-expanded="false"><td>▸ ' + esc(r.n) + "</td><td>" + esc(r.d.replace(/^Dekanat /, "")) + '</td><td class="num">' + r.l.length + '</td></tr><tr class="det" hidden><td colspan="3">' + personTags(r.l) + "</td></tr>"; }).join("") + "</tbody></table></div>");
+  h += pane("belum", '<p class="hint">Ikon WA mengirim info event dan ajakan mendaftar ke koordinator PD.</p>' +
+    (miss.length ? '<div class="pdw">' + miss.map(function (p, i) {
+      var num = waNumber(p.koorWa), name = esc(p.nama);
+      var wa = num ? '<a class="act wa" href="https://wa.me/' + num + "?text=" + encodeURIComponent(EVMSG(e, p)) + '" target="_blank" rel="noopener" aria-label="Kirim WA ke koordinator ' + name + '" title="WA koordinator' + (p.koor ? ": " + esc(p.koor.replace(/\s+/g, " ")) : "") + '">' + ICON_WA + "</a>" : '<button type="button" class="act" disabled title="Nomor WA koordinator belum ada" aria-label="Nomor WA koordinator ' + name + ' belum ada">' + ICON_WA + "</button>";
+      return '<span class="pdi"><span>' + name + "</span>" + wa + "</span>";
+    }).join("") + "</div>" : '<p class="note">Semua PD aktif sudah ada pendaftarnya.</p>'));
+  h += pane("seksi", '<div id="evSeksi"><p class="hint">Memuat laporan per seksi…</p></div>');
   el.innerHTML = h;
   el._regs = regs;
-  skDraw(e.id);
+  el._eid = e.id;
+  if (tab === "seksi") { if (SK.eid === e.id && SK.data) skDraw(e.id); else skLoad(e.id, e.tgl < TODAY ? "hadir" : "daftar"); }
   renderEvRegs();
+}
+function setEvTab(k) {
+  var el = document.getElementById("evDetail"); if (!el) return;
+  EV.tab = k;
+  Array.prototype.forEach.call(el.querySelectorAll("[data-evtab]"), function (b) { b.setAttribute("aria-selected", String(b.getAttribute("data-evtab") === k)); });
+  Array.prototype.forEach.call(el.querySelectorAll("[data-evpane]"), function (p) { p.hidden = p.getAttribute("data-evpane") !== k; });
+  if (k === "seksi" && el._eid && !(SK.eid === el._eid && SK.data)) {
+    var ev = (D.evx || []).filter(function (x) { return x.id === el._eid; })[0];
+    skLoad(el._eid, ev && ev.tgl < TODAY ? "hadir" : "daftar");
+  }
 }
 function renderEvRegs() {
   var el = document.getElementById("evDetail"), box = document.getElementById("evRegs");
@@ -3699,6 +3733,8 @@ function renderEvRegs() {
     l.map(function (p) { return "<tr><td>" + esc(p.nama) + "</td><td>" + esc(p.pd) + "</td><td>" + esc(ageLbl(p.usia)) + "</td><td>" + esc(p.st) + (p.val ? " ✓" : "") + "</td><td>" + esc(p.hadir) + "</td>" + (canDel ? '<td><button type="button" class="btn" data-pdel="' + esc(p.id) + '" data-nm="' + esc(p.nama) + '">Hapus</button></td>' : "") + "</tr>"; }).join("") + "</tbody></table></div>" + (canDel ? '<p class="note" id="pdelMsg" role="status">Hapus = ditandai Batal: hilang dari hitungan, barisnya tetap ada di Airtable.</p>' : "");
 }
 document.getElementById("tab-event").addEventListener("click", function (e) {
+  var evt = e.target.closest && e.target.closest("[data-evtab]");
+  if (evt) { setEvTab(evt.getAttribute("data-evtab")); return; }
   var pdl = e.target.closest && e.target.closest("[data-pdel]");
   if (pdl) {
     var pid = pdl.getAttribute("data-pdel"), pnm = pdl.getAttribute("data-nm"), pm = document.getElementById("pdelMsg");
@@ -3726,7 +3762,7 @@ document.getElementById("tab-event").addEventListener("click", function (e) {
     return;
   }
   var b = e.target.closest && e.target.closest("[data-ev]");
-  if (b) { EV.sel = b.getAttribute("data-ev"); EV.pdf = ""; EV.rq = ""; EV.dim = -1; EV.dv = ""; EV.open = true; renderEvent(); window.scrollTo(0, 0); }
+  if (b) { EV.sel = b.getAttribute("data-ev"); EV.tab = "daftar"; EV.pdf = ""; EV.rq = ""; EV.dim = -1; EV.dv = ""; EV.open = true; renderEvent(); window.scrollTo(0, 0); }
   if (e.target.closest && e.target.closest("#evBack")) { EV.open = false; renderEvent(); window.scrollTo(0, 0); }
   if (e.target.closest && e.target.closest("[data-evclr]")) { EV.dim = -1; EV.dv = ""; renderEvRegs(); }
   if (e.target.closest && e.target.closest("[data-act=srcretry]")) ensureEvt(true);
@@ -3746,9 +3782,9 @@ function toggleRow(tr) {
 }
 function drill(btn) {
   var d = +btn.dataset.dim, val = btn.dataset.val;
-  if (EV.dim === d && EV.dv === val) { EV.dim = -1; EV.dv = ""; renderEvRegs(); return; }
-  EV.dim = d; EV.dv = val; renderEvRegs();
-  var t = document.getElementById("evRegsPan"); if (t && t.scrollIntoView) t.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (EV.dim === d && EV.dv === val) { EV.dim = -1; EV.dv = ""; setEvTab("daftar"); renderEvRegs(); return; }
+  EV.dim = d; EV.dv = val; setEvTab("daftar"); renderEvRegs();
+  var t = document.getElementById("evRegs"); if (t && t.scrollIntoView) t.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 document.getElementById("tab-event").addEventListener("input", function (e) {
   if (e.target.id === "evQ") { EV.q = e.target.value; EV.limit = 10; renderEvent(); }
