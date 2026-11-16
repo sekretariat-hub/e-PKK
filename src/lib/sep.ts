@@ -4,6 +4,10 @@ import * as XLSX from "xlsx";
 import { Access, BASE_BPK, HttpError, T } from "./policy";
 import { at, listPage, listUntil } from "./airtable";
 import { clearProxyCache } from "./proxy";
+import { mintaApproval } from "./minta-approval";
+import { buatNotif } from "./notif";
+import { emailsTimSep } from "./penerima";
+import { appUrl } from "./mail";
 
 const TK = { judul: "fldYqmy7odEnwqbrh", event: "fldxM5KAH4txJsC4s", paroki: "fldfHUZK6u2zkI7Yu", token: "flddxcs0pEaEZlXL1", status: "fldidtKcy6zhf1owX", oleh: "fldfMsKP2X4j6WGXM", selesaiOleh: "fld83uibtfzWzpN0G" };
 const PS = { nama: "fld4aXu6UhTUyu2a8", keg: "fldJjgxA4mESGeOYG", lahir: "fldVwYghE0cSodecK", alamat: "fldBap2tEPX9R4LtD", paroki: "fldTj9n5kTQiquymW", jk: "fldU3sCQfDmubXeBZ", email: "fld99riZwzntgnERq", wa: "fldZIpZfjPf5JDkuo", status: "fld4dVr7hIV4xqAg7", sumber: "fldnQxpE9QVt0o9JH", oleh: "fldA6WcgCfLVd9Y5O" };
@@ -82,13 +86,42 @@ export async function sepCall(action: string, i: any, a: Access) {
       if (p === "pic" && !(a.sepParoki || []).includes(pid)) throw new HttpError(403, "Anda hanya boleh membuat KEP untuk paroki Anda.");
       paroki = [pid];
     } else if (p === "pic") throw new HttpError(403, "KEP non paroki hanya oleh Tim SEP BPK.");
+    const perluSetuju = p === "pic"; // Tim SEP BPK adalah pemutusnya sendiri
     const pref = tgl.slice(2, 4) + tgl.slice(5, 7) + tgl.slice(8, 10) + "-";
-    const ev = await at(`/v0/${BASE_BPK}/${T.events}`, { method: "POST", body: JSON.stringify({ typecast: true, records: [{ fields: { [EV.nama]: pref + nama, [EV.tgl]: tgl, [EV.kel]: jenis, [EV.jenis]: "Non Rutin", ...(lokasi ? { [EV.lokasi]: lokasi } : {}) } }] }) });
+    const ev = await at(`/v0/${BASE_BPK}/${T.events}`, { method: "POST", body: JSON.stringify({ typecast: true, records: [{ fields: { [EV.nama]: (perluSetuju ? "[Menunggu] " : "") + pref + nama, [EV.tgl]: tgl, [EV.kel]: jenis, [EV.jenis]: "Non Rutin", ...(lokasi ? { [EV.lokasi]: lokasi } : {}) } }] }) });
     const token = crypto.randomBytes(9).toString("base64url");
-    const kg = await at(`/v0/${BASE_BPK}/${T.sepKegiatan}`, { method: "POST", body: JSON.stringify({ records: [{ fields: { [TK.judul]: nama, [TK.event]: [ev.records[0].id], ...(paroki.length ? { [TK.paroki]: paroki } : {}), [TK.token]: token, [TK.status]: "Berjalan", [TK.oleh]: a.email } }] }) });
+    const kg = await at(`/v0/${BASE_BPK}/${T.sepKegiatan}`, { method: "POST", body: JSON.stringify({ typecast: true, records: [{ fields: { [TK.judul]: nama, [TK.event]: [ev.records[0].id], ...(paroki.length ? { [TK.paroki]: paroki } : {}), [TK.token]: token, [TK.status]: perluSetuju ? "Menunggu Persetujuan" : "Berjalan", [TK.oleh]: a.email } }] }) });
     clearProxyCache();
     console.log(JSON.stringify({ audit: "sep.create", who: a.email, kegiatan: kg.records[0].id }));
+    if (perluSetuju) {
+      let namaParoki = "";
+      if (paroki[0]) { try { const e = await at(`/v0/${BASE_BPK}/${T.paroki}/${paroki[0]}?returnFieldsByFieldId=true`); namaParoki = String(e.fields[PAR.nama] || ""); } catch {} }
+      await mintaApproval({
+        jenis: "sep", penerima: await emailsTimSep(),
+        pesan: `Permohonan ${jenis} baru menunggu persetujuan Tim SEP BPK: ${nama}${namaParoki ? ` (${namaParoki})` : ""}.`,
+        tautan: `sep:${kg.records[0].id}`, url: `${appUrl()}/dashboard#kep`,
+      }).catch(() => {});
+    }
     return { id: kg.records[0].id, eventId: ev.records[0].id, token };
+  }
+  if (action === "setujui" || action === "tolak") {
+    if (p !== "tim") throw new HttpError(403, "Hanya Tim SEP BPK yang boleh memutuskan permohonan kegiatan.");
+    const k = await getKeg(String(i?.kegiatanId));
+    if (k.fields[TK.status] !== "Menunggu Persetujuan") throw new HttpError(409, "Permohonan ini sudah diputuskan.");
+    const status = action === "setujui" ? "Berjalan" : "Ditolak";
+    await at(`/v0/${BASE_BPK}/${T.sepKegiatan}`, { method: "PATCH", body: JSON.stringify({ typecast: true, records: [{ id: k.id, fields: { [TK.status]: status } }] }) });
+    const eid = (k.fields[TK.event] || [])[0];
+    if (eid && REC.test(eid)) {
+      try {
+        const e = await at(`/v0/${BASE_BPK}/${T.events}/${eid}?returnFieldsByFieldId=true`);
+        const nm = String(e.fields[EV.nama] || "").replace(/^\[Menunggu\] /, "");
+        await at(`/v0/${BASE_BPK}/${T.events}`, { method: "PATCH", body: JSON.stringify({ records: [{ id: eid, fields: { [EV.nama]: (status === "Ditolak" ? "[Ditolak] " : "") + nm } }] }) });
+      } catch {}
+    }
+    clearProxyCache(); console.log(JSON.stringify({ audit: "sep." + action, who: a.email, kegiatan: k.id }));
+    const pemohon = String(k.fields[TK.oleh] || "");
+    if (pemohon) await buatNotif([pemohon], `Permohonan ${String(k.fields[TK.judul] || "kegiatan")} ${status === "Berjalan" ? "disetujui Tim SEP BPK. Link pendaftaran sudah aktif." : "ditolak Tim SEP BPK."}`, `sep:${k.id}`);
+    return { ok: true, status };
   }
   if (action === "finish") {
     if (p !== "tim") throw new HttpError(403, "Hanya Tim SEP BPK yang boleh menyelesaikan kegiatan.");
@@ -233,6 +266,8 @@ export async function kegByToken(token: string) {
   if (!/^[A-Za-z0-9_-]{8,40}$/.test(token)) return null;
   const { records } = await listPage(BASE_BPK, T.sepKegiatan, { fieldIds: [TK.judul, TK.status, TK.token, TK.event, TK.paroki], pageSize: 1, formula: `{Token}="${token}"` });
   const r = records[0]; if (!r || r.fields[TK.token] !== token) return null;
+  if (r.fields[TK.status] === "Menunggu Persetujuan") throw new HttpError(403, "Kegiatan ini belum disetujui Tim SEP BPK.");
+  if (r.fields[TK.status] === "Ditolak") throw new HttpError(403, "Kegiatan ini tidak disetujui Tim SEP BPK.");
   let tgl = "", lokasi = "", paroki = "";
   const eid = (r.fields[TK.event] || [])[0], pid = (r.fields[TK.paroki] || [])[0];
   if (eid && REC.test(eid)) { try { const e = await at(`/v0/${BASE_BPK}/${T.events}/${eid}?returnFieldsByFieldId=true`); tgl = String(e.fields[EV.tgl] || "").slice(0, 10); lokasi = String(e.fields[EV.lokasi] || ""); } catch {} }

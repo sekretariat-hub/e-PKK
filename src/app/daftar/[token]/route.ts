@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { kegByToken, parokiKeuskupan } from "@/lib/sep";
+import { HttpError } from "@/lib/policy";
 
 export const dynamic = "force-dynamic";
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export async function GET(_: Request, ctx: { params: Promise<{ token: string }> }) {
   const { token } = await ctx.params;
-  const k = await kegByToken(token).catch(() => null);
+  let blokir = "";
+  const k = await kegByToken(token).catch((e) => { if (e instanceof HttpError && e.status === 403) blokir = e.message; return null; });
   const head = '<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pendaftaran @SEP</title><link rel="icon" href="/favicon.png"><style>body{font-family:system-ui,sans-serif;background:#f4f6f8;margin:0;color:#14212b}main{max-width:520px;margin:0 auto;padding:20px 16px 40px}header{text-align:center}header img{width:96px;height:96px;object-fit:contain}h1{font-size:20px;margin:6px 0 0}.sub{color:#5b6773;font-size:13px;margin:2px 0 14px}form{background:#fff;border-radius:12px;padding:16px;display:grid;gap:12px;box-shadow:0 1px 3px #0001}label{display:grid;gap:4px;font-size:14px;font-weight:600}input,select,textarea{font:inherit;padding:10px;border:1px solid #c9d1d9;border-radius:8px;width:100%;box-sizing:border-box}button{font:inherit;font-weight:700;padding:12px;border:0;border-radius:10px;background:#2f6f73;color:#fff;cursor:pointer}.msg{padding:10px;border-radius:8px;font-size:14px}.ok{background:#e3f4ea}.bad{background:#fde8e6}.hp{position:absolute;left:-9999px}.info{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 3px #0001;font-size:14px;line-height:1.5}.info dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:8px 0}.info dt{color:#5b6773}.info dd{margin:0;font-weight:600}.info p{margin:6px 0 0}fieldset{border:0;padding:0;margin:0;display:grid;gap:6px}legend{font-size:14px;font-weight:600;padding:0;margin-bottom:4px}.row3{display:grid;grid-template-columns:1fr 1.6fr 1.2fr;gap:8px}small.warn{font-weight:400;color:#8a5a00;font-size:12.5px}.pern{background:#f4f6f8;border-radius:8px;padding:10px}.ck{display:flex;gap:8px;align-items:flex-start;font-weight:400;font-size:13.5px}.ck input{width:auto;margin-top:3px}button:disabled{opacity:.5;cursor:not-allowed}</style></head><body><main><header><img src="/logo-elshaddai.png" alt="El Shaddai"><h1>@SEP</h1><div class="sub">SISTEM INFORMASI EVANGELISASI PRIBADI</div></header>';
+  if (blokir) return new NextResponse(head + `<div class="msg bad">${esc(blokir)}</div></main></body></html>`, { status: 403, headers: { "content-type": "text/html; charset=utf-8" } });
   if (!k) return new NextResponse(head + '<div class="msg bad">Link pendaftaran tidak ditemukan.</div></main></body></html>', { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
   if (k.selesai) return new NextResponse(head + `<h2>${esc(k.judul)}</h2><div class="msg bad">Pendaftaran sudah ditutup.</div></main></body></html>`, { headers: { "content-type": "text/html; charset=utf-8" } });
   const paroki = await parokiKeuskupan().catch(() => [] as string[]);
