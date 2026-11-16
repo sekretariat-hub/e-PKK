@@ -1,4 +1,5 @@
 import { signIn } from "@/auth";
+import s from "./masuk.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -6,12 +7,17 @@ export default async function Masuk({ searchParams }: { searchParams: Promise<{ 
   const sp = await searchParams;
   const dest = sp?.kelola === "1" ? "/dashboard?kelola=1" : /^\/absen(\/[A-Za-z0-9._-]+)?$/.test(sp?.next || "") ? (sp.next as string) : "/";
   return (
-    <main style={{ maxWidth: 420, margin: "14vh auto", padding: 24, background: "#fff", borderRadius: 12, border: "1px solid #dde2e7", textAlign: "center" }}>
-      <h1 style={{ fontSize: 22, marginTop: 0 }}>BPKPKK Bandung</h1>
-      <p style={{ color: "#5b6672" }}>Dashboard pengurus, pewarta, PD, dan kegiatan. Masuk dengan akun Google yang sudah didaftarkan sekretariat.</p>
-      <form action={async () => { "use server"; await signIn("google", { redirectTo: dest }); }}>
-        <button type="submit" style={{ padding: "11px 18px", borderRadius: 8, border: "1px solid #aab4bf", background: "#fff", fontSize: 15, cursor: "pointer" }}>Masuk dengan Google</button>
-      </form>
+    <main className={s.bg}>
+      <section className={s.card}>
+        <img className={s.logo} src="/logo.png" alt="Logo BPK Keuskupan Bandung" />
+        <h1 className={s.title}>BPK PKK Bandung</h1>
+        <p className={s.sub}>Dashboard pengurus, pewarta, PD, dan kegiatan. Masuk dengan akun Google yang sudah didaftarkan sekretariat.</p>
+        <div className={s.accent} aria-hidden="true" />
+        <form action={async () => { "use server"; await signIn("google", { redirectTo: dest }); }}>
+          <button type="submit" className={s.btn}>Masuk dengan Google</button>
+        </form>
+        <p className={s.note}>Belum terdaftar? Hubungi sekretariat BPK PKK Bandung.</p>
+      </section>
     </main>
   );
 }
