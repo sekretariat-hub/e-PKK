@@ -475,6 +475,7 @@ header p { font-size: 13px; }
 #evRegs .tw, .evpane[data-evpane="pd"] .tw { max-height: 60vh; overflow: auto; }
 #evRegs thead th, .evpane[data-evpane="pd"] thead th { position: sticky; top: 0; background: var(--surface); }
 @media (max-width: 700px) { .evdetail .tiles.sm { grid-template-columns: repeat(3, minmax(0, 1fr)); } .evdetail .tiles.sm .tile small { display: none; } }
+.mb{display:grid;gap:6px}.mb-r{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
 </style>
 
 <div class="wrap">
@@ -2626,7 +2627,8 @@ function openKui(key, opener) {
 /* ---------- tab pewarta, pengajar, konselor ---------- */
 /* ---------- tab Pewarta (sumber: tabel Pewarta BPK, base SMP) ---------- */
 var T_PWB = "tblCcm2UAWHquZzEk";
-var PB = { nama: "fldYlcG3J6Oqe7iPP", pang: "fldEsu7jGDFdlNzEh", wa: "fldLTJqhCx9Fmg3Pn", pd: "fldEhgiSEafmygmkw", paroki: "fldHH0JkuWgIaw7QD", dek: "fldWATyLrvoPlSLC7", sp: "fldIt4yvwOOsFa4XM", kp: "fldpoZIxZJA9n9PzL", sg: "fldFuXMCtrYyht9S0", sk: "fld5Ov9D9yn69Udvi", kual: "fldceNGz3NtUyrggw", asal: "fldgnKmnX5zUn3OkR", lahir: "fld8wDDPjswPjRRBj", libat: "fldxMRYERoRqjbeFv", modul: "fldZPqCG8ohmWHwY4", yt: "fldJGTPgfN00lAdMo", foto: "fldZQOwafh1h9gw29", jml: "fldVKiKmsr0da2FlA" };
+var PB = { nama: "fldYlcG3J6Oqe7iPP", pang: "fldEsu7jGDFdlNzEh", wa: "fldLTJqhCx9Fmg3Pn", pd: "fldEhgiSEafmygmkw", paroki: "fldHH0JkuWgIaw7QD", dek: "fldWATyLrvoPlSLC7", sp: "fldIt4yvwOOsFa4XM", kp: "fldpoZIxZJA9n9PzL", sg: "fldFuXMCtrYyht9S0", sk: "fld5Ov9D9yn69Udvi", kual: "fldceNGz3NtUyrggw", asal: "fldgnKmnX5zUn3OkR", lahir: "fld8wDDPjswPjRRBj", libat: "fldxMRYERoRqjbeFv", modul: "fldZPqCG8ohmWHwY4", yt: "fldJGTPgfN00lAdMo", foto: "fldZQOwafh1h9gw29", jml: "fldVKiKmsr0da2FlA",
+  bSHDR: "fldz9vIvh3fIgKM82", bPertumbuhan: "fldmXYivlkmJWwkjP", bDKK: "fld9xgf1nCTfRkcIR", bMYS: "fldceB2dXYezl6Nex", bKEP: "fldsAe4n2fnvzl3sC", bRonRyan: "fldipPQJLXWAQ6RMD" };
 var MODUL = ["SHDR", "Pertumbuhan", "DKK", "MYS", "KEP", "Ron Ryan"];
 var SP_OPT = ["Aktif", "Aktif (dengan Surat)", "Tidak Aktif", "Mundur", "Calon Pewarta", "Calon Pewarta Muda Tetap"];
 var AGE_GRP = ["Muda (≤35)", "Dewasa (36–59)", "Senior (60+)", "Usia belum diisi"];
@@ -2644,6 +2646,23 @@ function pwDerive(o) {
   o.calon = /calon/i.test(o.sp);
   return o;
 }
+/* Bab per modul (kolom angka di tabel Pewarta BPK). Hasil: { SHDR: ["0","1"], ... } dengan bab terurut. */
+function babSort(a, b) { var x = +a, y = +b; if (isNaN(x)) return isNaN(y) ? 0 : 1; if (isNaN(y)) return -1; return x - y; }
+function pwBab(v) {
+  var out = {};
+  MODUL.forEach(function (m) { out[m] = flat(v[PB["b" + m.replace(/\s+/g, "")]]).slice().sort(babSort); });
+  return out;
+}
+function babText(m, list) {
+  if (!list || !list.length) return '<span class="note">bab belum diisi</span>';
+  if (list.length === 1 && /semua/i.test(list[0])) return "Semua bab";
+  return "Bab " + list.map(esc).join(", ");
+}
+function modulBabHtml(o) {
+  if (!o.modul.length) return "";
+  var mods = o.modul.slice().sort(function (a, b) { return MODUL.indexOf(a) - MODUL.indexOf(b); });
+  return '<div class="mb">' + mods.map(function (m) { return '<div class="mb-r"><span class="tag alt">' + esc(m) + "</span> <span>" + babText(m, (o.bab || {})[m]) + "</span></div>"; }).join("") + "</div>";
+}
 function loadPwb() {
   var ids = Object.keys(PB).map(function (k) { return PB[k]; });
   return fetchAll(BASE_SMP, T_PWB, ids).then(function (recs) {
@@ -2651,7 +2670,7 @@ function loadPwb() {
       var v = r.cellValuesByFieldId || {};
       return pwDerive({ id: r.id, nama: one(v[PB.nama]).trim(), pang: one(v[PB.pang]), wa: one(v[PB.wa]), pd: one(v[PB.pd]).replace(/\s+/g, " ").trim(), paroki: one(v[PB.paroki]), dek: flat(v[PB.dek]).join(", "),
         sp: one(v[PB.sp]), kp: one(v[PB.kp]), sg: one(v[PB.sg]), sk: one(v[PB.sk]), kual: one(v[PB.kual]), asal: one(v[PB.asal]).trim(), lahir: one(v[PB.lahir]).slice(0, 10),
-        libat: flat(v[PB.libat]), modul: flat(v[PB.modul]), yt: safeUrl(one(v[PB.yt])), foto: photoUrl(v[PB.foto]), jml: Number(one(v[PB.jml])) || 0 });
+        libat: flat(v[PB.libat]), modul: flat(v[PB.modul]), bab: pwBab(v), yt: safeUrl(one(v[PB.yt])), foto: photoUrl(v[PB.foto]), jml: Number(one(v[PB.jml])) || 0 });
     }).filter(function (o) { return o.nama; }).sort(function (a, b) { return cmpId(a.nama, b.nama); });
   });
 }
@@ -2789,12 +2808,12 @@ function viewPwb(id, opener) {
     '<a class="act" href="' + esc(o.yt) + '" target="_blank" rel="noopener"><span>Buka di YouTube</span></a>' : '<span class="note">Belum ada link YouTube. Isi lewat tombol Edit.</span>';
   var hist = pwHist(o);
   var brief = '<dl class="dl">' + drow("Keahlian", [o.kual ? '<span class="tag">' + esc(o.kual) + "</span>" : "", tagsHtml(o.libat)].filter(Boolean).join(" ")) + drow("Usia", o.age == null ? "" : esc(o.age + " tahun · " + o.ag)) +
-    drow("Modul dikuasai", tagsHtml(o.modul) || '<span class="note">Belum diisi</span>') + drow("PD / Komunitas", esc(o.pd)) + "</dl>" +
+    drow("Modul dikuasai", modulBabHtml(o) || '<span class="note">Belum diisi</span>') + drow("PD / Komunitas", esc(o.pd)) + "</dl>" +
     '<p style="margin:10px 0"><button type="button" class="btn" data-pwhist="' + o.id + '">Riwayat pewartaan (' + hist.length + ")</button></p>" +
     '<details class="more"><summary>Detail lengkap dan video</summary>';
   var html = brief + '<dl class="dl">' + drow("Panggilan", esc(o.pang)) + drow("Status pewarta", statusTag(o)) + drow("Kategori", esc(o.kp)) + drow("Status pengajar", esc(o.sg)) + drow("Status konselor", esc(o.sk)) +
     drow("Kualifikasi", esc(o.kual)) + drow("Asal BPK", esc(o.asal)) + drow("PD / Komunitas", esc(o.pd)) + drow("Paroki", esc(o.paroki)) + drow("Dekanat", esc(o.dek)) +
-    drow("Kelompok usia", o.age == null ? "" : esc(o.age + " th · " + o.ag)) + drow("Keterlibatan", tagsHtml(o.libat)) + drow("Modul dikuasai", tagsHtml(o.modul)) +
+    drow("Kelompok usia", o.age == null ? "" : esc(o.age + " th · " + o.ag)) + drow("Keterlibatan", tagsHtml(o.libat)) + drow("Modul dikuasai", modulBabHtml(o)) +
     drow("Jumlah pewartaan", o.jml ? esc(String(o.jml)) : "") + drow("Hubungi", waLink(o.wa)) + drow("Video", vid) + "</dl></details>";
   openInfo(o.nama, [o.pang, o.kual].filter(Boolean).join(" · "), html, opener, o.foto);
 }
