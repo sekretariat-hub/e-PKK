@@ -1,7 +1,9 @@
 // Daftar pengguna yang disetujui, disimpan di tabel "Pengguna Dashboard" (Airtable).
 import { Access, ALL_TABS, BASE_BPK, T } from "./policy";
 import { at, listPage } from "./airtable";
-import { notifySuperadmins } from "./mail";
+import { notifySuperadmins, appUrl } from "./mail";
+import { mintaApproval } from "./minta-approval";
+import { emailsByJabatan, RE_APPROVER_USER } from "./penerima";
 
 export const AF = { sepPeran: "fldJ3wO4gKKrUChC5", sepParoki: "fldt2iu9oKWIHcmU6", email: "fldXCAPjc4bPkTbSq", nama: "fldR7uM68NdmjWJdK", status: "fldRiPREBGEFPsyjW", level: "fldvlRQXDZJdIIcw8", tabs: "fldgMD37Bgpg1ZdW6", jabatan: "fldKD8CpWcra5yaTR", login: "fldhehrsHwvACGhiu", umat: "fldf0NRl2Ts4kVxKr", jabLk: "fldXkY5f3WwMcB9Yz" };
 
@@ -47,6 +49,14 @@ export async function registerLogin(email: string, name: string) {
   if (!id) {
     await at(`/v0/${BASE_BPK}/${T.pengguna}`, { method: "POST", body: JSON.stringify({ records: [{ fields: { [AF.email]: norm(email), [AF.nama]: name || "", [AF.status]: "Menunggu", [AF.level]: "View", [AF.login]: now } }] }) });
     try { await notifySuperadmins(norm(email), name || ""); } catch (e) { console.error("notif email gagal", e); }
+    // WA ke Sekretariat/Sekretaris: pengguna baru menunggu persetujuan. Gagal di sini tidak boleh menggagalkan login.
+    try {
+      await mintaApproval({
+        jenis: "user", penerima: await emailsByJabatan(RE_APPROVER_USER),
+        pesan: `Pengguna baru menunggu persetujuan e-PKK: ${name || "(tanpa nama)"} <${norm(email)}>.`,
+        tautan: `user:${norm(email)}`, url: appUrl() + "/dashboard?kelola=1",
+      });
+    } catch (e) { console.error("WA persetujuan user baru gagal", e); }
   } else {
     await at(`/v0/${BASE_BPK}/${T.pengguna}`, { method: "PATCH", body: JSON.stringify({ records: [{ id, fields: { [AF.login]: now, ...(v && !v.nama && name ? { [AF.nama]: name } : {}) } }] }) });
   }
