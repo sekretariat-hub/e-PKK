@@ -2698,7 +2698,13 @@ function pwActs(o) {
     '<button type="button" class="act" data-pw="edit" data-id="' + o.id + '" aria-label="Edit ' + esc(o.nama) + '" title="Edit status dan modul">' + ICON_EDIT + "<span>Edit</span></button>" + waBtn(o);
 }
 function nameBtn(o) { return '<button type="button" class="linkbtn" data-pw="view" data-id="' + o.id + '">' + esc(o.nama) + "</button>" + (o.age != null ? ' <span class="note">' + o.age + " th</span>" : ""); }
-function modulTags(o) { return o.modul.length ? o.modul.map(function (m) { return '<span class="jab">' + esc(m) + "</span>"; }).join("") : '<span class="note">–</span>'; }
+function modulTags(o) {
+  if (!o.modul.length) return '<span class="note">–</span>';
+  return o.modul.map(function (m) {
+    var b = (o.bab || {})[m] || [], t = !b.length ? "" : (b.length === 1 && /semua/i.test(b[0])) ? "semua bab" : "bab " + b.map(esc).join(", ");
+    return '<span class="jab">' + esc(m) + (t ? ' <span class="note">· ' + t + "</span>" : "") + "</span>";
+  }).join("");
+}
 
 var pw = { q: "", status: "aktif", usia: "", modul: "", kat: "", pd: "", limit: 120, view: "daftar", pdf: "semua" };
 function pwFiltered() {
