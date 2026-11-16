@@ -56,3 +56,13 @@ export async function notifyOwner(subject: string, text: string): Promise<boolea
     return true;
   } catch (e) { console.error("email ke pemilik gagal", e); return false; }
 }
+
+/** Email umum ke beberapa penerima. false bila SMTP belum diatur; melempar bila pengiriman gagal. */
+export async function kirimEmail(to: string[], subject: string, text: string): Promise<boolean> {
+  const { SMTP_USER, SMTP_PASS } = process.env;
+  if (!SMTP_USER || !SMTP_PASS) { console.log("SMTP belum diatur; email dilewati: " + subject); return false; }
+  const port = Number(process.env.SMTP_PORT) || 465;
+  const tr = nodemailer.createTransport({ host: process.env.SMTP_HOST || "smtp.gmail.com", port, secure: port === 465, auth: { user: SMTP_USER, pass: SMTP_PASS } });
+  await tr.sendMail({ from: process.env.MAIL_FROM || `e-PKK BPKPKK Bandung <${SMTP_USER}>`, to, subject, text });
+  return true;
+}

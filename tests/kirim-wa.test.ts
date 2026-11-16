@@ -1,7 +1,7 @@
 import { it, expect, vi, beforeEach } from "vitest";
 
 const KEY = "KUNCI-RAHASIA-TES-123";
-beforeEach(() => { vi.resetModules(); vi.unstubAllGlobals(); delete process.env.BABLAST_API_KEY; delete process.env.BABLAST_SENDER_CODE; delete process.env.BABLAST_API_URL; process.env.AIRTABLE_TOKEN = "x"; });
+beforeEach(() => { vi.resetModules(); vi.unstubAllGlobals(); delete process.env.BABLAST_API_KEY; delete process.env.BABLAST_SENDER_CODE; delete process.env.BABLAST_API_URL; process.env.AIRTABLE_TOKEN = "x"; vi.doMock("../src/lib/wa-alert", () => ({ laporWaGagal: async () => {} })); });
 
 it("kirimWa: tanpa API key ditolak 503 dan tidak memanggil jaringan", async () => {
   const f = vi.fn(); vi.stubGlobal("fetch", f);
