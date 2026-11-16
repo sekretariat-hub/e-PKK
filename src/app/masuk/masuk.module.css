@@ -12,3 +12,13 @@
 .btnGhost:hover { background: #E8ECF8; }
 .accent { height: 3px; width: 56px; margin: 0 auto 16px; border-radius: 99px; background: linear-gradient(90deg, #C62F2F, #E8B923); }
 .note { margin: 14px 0 0; font-size: 12px; color: #66708F; }
+.form { text-align: left; }
+.lbl { display: block; margin: 10px 0 4px; font-size: 12px; font-weight: 700; color: #1E2F6B; }
+.inp { width: 100%; box-sizing: border-box; padding: 11px 12px; margin-bottom: 12px; border: 1px solid #D5DAEA; border-radius: 12px; font: inherit; color: #172040; background: #fff; }
+.inp:focus-visible { outline: 3px solid #E8B923; outline-offset: 1px; }
+.kode { text-align: center; font-size: 26px; letter-spacing: .5em; font-weight: 800; }
+.link { display: block; width: 100%; margin-top: 10px; border: 0; background: none; font: inherit; font-size: 12.5px; color: #2C418F; text-decoration: underline; cursor: pointer; }
+.info { margin: 0 0 10px; padding: 9px 11px; font-size: 12.5px; line-height: 1.45; color: #1E2F6B; background: #E8ECF8; border-radius: 10px; }
+.err { margin: 0 0 10px; padding: 9px 11px; font-size: 12.5px; line-height: 1.45; color: #9B1C1C; background: #FBE9E9; border-radius: 10px; }
+.pemisah { display: flex; align-items: center; gap: 10px; margin: 16px 0; font-size: 12px; color: #66708F; }
+.pemisah::before, .pemisah::after { content: ""; flex: 1; height: 1px; background: #E6E9F3; }
