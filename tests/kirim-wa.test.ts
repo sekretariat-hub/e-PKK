@@ -106,3 +106,11 @@ it("UI Administrasi: kartu pengguna Disetujui punya tombol Kirim WA dengan konfi
   expect(ADMIN_JS).toContain('api("kirimwa", { id: u.id })');
   expect(ADMIN_JS).toContain("Klik lagi untuk kirim WA");
 });
+
+it("UI form login: kolom password punya tombol mata untuk melihat/menyembunyikan", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync("src/app/masuk/FormWa.tsx", "utf8");
+  expect(src).toContain("Tampilkan password");
+  expect(src).toContain("Sembunyikan password");
+  expect(src).toMatch(/type=\{lihat \? "text" : "password"\}/);
+});

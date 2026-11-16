@@ -22,3 +22,8 @@
 .err { margin: 0 0 10px; padding: 9px 11px; font-size: 12.5px; line-height: 1.45; color: #9B1C1C; background: #FBE9E9; border-radius: 10px; }
 .pemisah { display: flex; align-items: center; gap: 10px; margin: 16px 0; font-size: 12px; color: #66708F; }
 .pemisah::before, .pemisah::after { content: ""; flex: 1; height: 1px; background: #E6E9F3; }
+.sandi { position: relative; }
+.sandi .inp { padding-right: 46px; }
+.mata { position: absolute; top: 0; right: 0; height: 43px; width: 44px; display: grid; place-items: center; border: 0; background: none; color: #66708F; cursor: pointer; border-radius: 0 12px 12px 0; }
+.mata:hover { color: #1E2F6B; }
+.mata:focus-visible { outline: 3px solid #E8B923; outline-offset: -3px; }

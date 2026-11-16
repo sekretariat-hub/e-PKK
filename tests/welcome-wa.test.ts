@@ -19,9 +19,22 @@ describe("welcomeWa", () => {
   it("memuat sapaan, link, email login, hak akses, cara masuk", () => {
     expect(t).toContain("Shalom Richie");
     expect(t).toContain("https://e-pkk-one.vercel.app");
-    expect(t).toContain("richie@gmail.com");
     expect(t).toContain("Hanya lihat");
-    expect(t).toMatch(/Masuk dengan Google/);
+  });
+  it("menjelaskan cara masuk baru: nomor WA + kode OTP + password, bukan lagi wajib Google", () => {
+    expect(t).toContain("*Cara masuk*");
+    expect(t).toMatch(/nomor WhatsApp/i);
+    expect(t).toMatch(/kode 4 digit/i);
+    expect(t).toMatch(/buat password/i);
+    expect(t).toMatch(/Lupa password/i);
+    expect(t).not.toMatch(/email lain tidak dikenali/i);
+    expect(t).not.toMatch(/Login dengan Gmail/i);
+  });
+  it("tetap menyebut Google sebagai cadangan bagi yang akunnya terdaftar dengan email", () => {
+    expect(welcomeWa({ nama: "A", email: "a@gmail.com", level: "View", tabs: ["Dashboard"], url: "u" })).toContain("a@gmail.com");
+  });
+  it("akun penanda @wa.epkk tidak pernah ditampilkan sebagai email", () => {
+    expect(welcomeWa({ nama: "A", email: "628123@wa.epkk", level: "View", tabs: ["Dashboard"], url: "u" })).not.toContain("wa.epkk");
   });
   it("hanya menjelaskan menu yang dipegang, tanpa entitas HTML", () => {
     expect(t).toContain("Event & pendaftar");
