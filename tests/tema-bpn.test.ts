@@ -49,3 +49,32 @@ describe("tema BPN: komponen", () => {
     expect(html).toContain(".fil input[type=\"search\"], .fil select, .dlg input, .dlg textarea, .dlg select { border-radius: 12px");
   });
 });
+
+describe("tema BPN: perbaikan hasil review", () => {
+  const html = renderDashboard(acc);
+  it("header tidak lengket sehingga tidak menutupi sidebar, banner view-as, dan target gulir", () => {
+    expect(html).not.toMatch(/header\.brand \{[^}]*position: sticky/);
+  });
+  it("mode @SEP tidak membengkakkan logo sidebar dan header", () => {
+    expect(html).toContain("body.sep .sidebrand .logo, body.sep header.brand .logo { width: 44px; height: 44px; }");
+  });
+  it("tombol menu menyisakan ruang kanan untuk titik emas menu aktif", () => {
+    expect(html).toMatch(/\.side \.tabbtn \{[^}]*padding: 10px 30px 10px 12px/);
+  });
+});
+
+describe("tema BPN: syncNavGroups di DOM", () => {
+  it("menyembunyikan grup yang semua menunya tersembunyi, menampilkan yang masih punya menu", async () => {
+    const { JSDOM } = await import("jsdom");
+    const html = renderDashboard({ ...acc, tabs: ["Dashboard", "Keuangan"] });
+    const m = html.match(/function syncNavGroups\(\) \{[\s\S]*?\n\}\n/);
+    expect(m).not.toBeNull();
+    const dom = new JSDOM('<!doctype html><body>' + html.match(/<nav class="tabs side"[\s\S]*?<\/nav>/)![0] + "</body>", { runScripts: "outside-only" });
+    const w = dom.window as any;
+    w.eval(m![0]);
+    w.document.querySelectorAll(".tabbtn").forEach((b: any) => { if (!["beranda", "keuangan"].includes(b.dataset.tab)) b.hidden = true; });
+    w.syncNavGroups();
+    const hid = (g: string) => (w.document.querySelector(`[data-grp="${g}"]`) as any).hidden;
+    expect([hid("utama"), hid("pelayanan"), hid("kegiatan"), hid("admin")]).toEqual([false, true, true, false]);
+  });
+});
