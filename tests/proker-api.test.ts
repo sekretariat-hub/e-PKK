@@ -6,7 +6,7 @@ let db: Record<string, any[]>;
 let seq: number;
 const calls: { method: string; table: string; body?: any }[] = [];
 const emptyPeran = { koordBidang: [], koordSeksi: [], sekjen: false, bendahara: false, pimpinan: false };
-let peran: any, rows: any[], notifs: any[];
+let peran: any, rows: any[], notifs: any[], approvals: any[];
 
 vi.mock("../src/lib/proker-roles", () => ({
   peranOf: async () => peran,
@@ -15,6 +15,7 @@ vi.mock("../src/lib/proker-roles", () => ({
   seksiBidang: async () => new Map([["Forkom 1", "Kesekretariatan"], ["Forkom 2", "Kesekretariatan"], ["Sekolah", "Inreach (El Shaddai)"]]),
   emailsWhere: async () => ["koord@x.com"],
 }));
+vi.mock("../src/lib/minta-approval", () => ({ mintaApproval: async (o: any) => { approvals.push(o); notifs.push({ to: o.penerima, pesan: o.pesan, tautan: o.tautan }); return { wa: 0, tanpaNomor: 0, gagal: 0 }; } }));
 vi.mock("../src/lib/notif", () => ({ buatNotif: async (to: string[], pesan: string, tautan: string) => { notifs.push({ to, pesan, tautan }); } }));
 
 function fakeFetch() {
@@ -54,7 +55,7 @@ const baru = { nama: "Retret", detail: "Detail", mulai: "2027-03", seksiTerlibat
 beforeEach(() => {
   vi.resetModules();
   process.env.AIRTABLE_TOKEN = "x";
-  db = {}; seq = 0; calls.length = 0; notifs = [];
+  db = {}; seq = 0; calls.length = 0; notifs = []; approvals = [];
   peran = { ...emptyPeran };
   rows = [{ bidang: "Kesekretariatan", seksi: "Forkom 1", peran: "Ketua" }];
   fakeFetch();
@@ -86,6 +87,17 @@ describe("ajukanProgram", () => {
     expect(rec.fields[PK.seksiTerlibat]).toBe("Forkom 1");
     expect(rec.fields[PK.status]).toBe("Menunggu Sekjen");
     expect(notifs.length).toBe(1);
+  });
+  it("pengajuan meminta approval Sekjen lewat WA: satu permintaan jenis proker dengan tautan dan url ke program itu", async () => {
+    const { ajukanProgram } = await import("../src/lib/proker");
+    const { id } = await ajukanProgram(acc, baru);
+    expect(approvals).toHaveLength(1);
+    expect(approvals[0].jenis).toBe("proker");
+    expect(approvals[0].penerima).toEqual(["koord@x.com"]);
+    expect(approvals[0].tautan).toBe(`proker:${id}`);
+    expect(approvals[0].url).toContain(`/dashboard#proker:${id}`);
+    expect(approvals[0].pesan).toContain("Retret");
+    expect(notifs).toHaveLength(1); // lonceng dibuat oleh mintaApproval, tidak ganda
   });
   it("Anggota biasa tidak boleh mengajukan", async () => {
     rows = [{ bidang: "Kesekretariatan", seksi: "Forkom 1", peran: "Anggota" }];
@@ -140,6 +152,14 @@ describe("putuskan (alur baru: cukup Sekjen / Koordinator BPK)", () => {
       const { putuskan } = await import("../src/lib/proker");
       expect((await putuskan(acc, { programId: "recPPPPPPPPPPPPPP", tahap: "Sekjen", keputusan: "Setuju" })).status).toBe("Disetujui");
     }
+  });
+  it("kabar keputusan ke pengaju hanya lonceng biasa, tanpa permintaan WA", async () => {
+    seed({ [PK.status]: "Menunggu Sekjen" });
+    peran = { ...emptyPeran, sekjen: true };
+    const { putuskan } = await import("../src/lib/proker");
+    await putuskan({ ...acc, email: "sekjen@x.com", level: "Superadmin" } as any, { programId: "recPPPPPPPPPPPPPP", tahap: "Sekjen", keputusan: "Setuju" });
+    expect(notifs.length).toBeGreaterThan(0);
+    expect(approvals).toHaveLength(0);
   });
   it("keputusan ganda ditolak 409", async () => {
     seed({ [PK.status]: "Menunggu Sekjen" });

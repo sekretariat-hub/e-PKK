@@ -286,5 +286,14 @@ export const PROKER_JS = String.raw`
   };
   window.prokerOpen = function (id) { var p = items.filter(function (x) { return x.id === id; })[0]; if (p) detail(id); else window.__PROKER_OPEN = id; };
   window.EPK_PROKER_OPEN = function () { buildTabs(); load(); };
+  /* Tautan dari WA: /dashboard#proker:<id> membuka tab Program Kerja dan langsung program itu. */
+  (function () {
+    var m = /^#proker:(rec[A-Za-z0-9]{14})$/.exec(location.hash || "");
+    if (!m) return;
+    var tb = document.getElementById("tabbtn-proker");
+    if (!tb) return;
+    window.__PROKER_OPEN = m[1];
+    setTimeout(function () { tb.click(); }, 0);
+  })();
 })();
 `;
