@@ -1,10 +1,11 @@
 // Pengelolaan pengguna (khusus Superadmin). Tabel "Pengguna Dashboard" tidak pernah dihapus barisnya dari sini.
 import { ALL_TABS, BASE_BPK, HttpError, T } from "./policy";
-import { at, listPage, listUntil, resolveLinks } from "./airtable";
+import { at, getRecord, listPage, listUntil, resolveLinks } from "./airtable";
 import { AF, invalidateAccess, jabatanOf } from "./access";
 import { appUrl } from "./mail";
 import { welcomeWa } from "./mail-template";
 import { waDigits } from "./absen";
+import { kirimWa } from "./wa";
 
 export type Actor = { level: string; tabs: string[] };
 const SUPER: Actor = { level: "Superadmin", tabs: ALL_TABS };
@@ -58,6 +59,32 @@ async function umatList() {
   return v;
 }
 
+const sentAt = new Map<string, number>();
+const maskWa = (d: string) => d.slice(0, 4) + "****" + d.slice(-3);
+
+/** Kirim instruksi login (pesan sambutan) ke nomor WA umat yang tertaut pada pengguna. Superadmin: semua; Admin: hanya pengguna View dengan menu yang ia miliki. */
+async function kirimWaPengguna(i: any, selfEmail: string, actor: Actor) {
+  const id = String(i?.id || "");
+  if (!/^rec[A-Za-z0-9]{14}$/.test(id)) throw new HttpError(400, "id tidak valid.");
+  const rec = await getRecord(BASE_BPK, T.pengguna, id);
+  const f = rec.fields, u = toUser(rec);
+  if (u.status !== "Disetujui") throw new HttpError(400, "Pengguna belum disetujui. Setujui dulu sebelum mengirim instruksi login.");
+  const tabs: string[] = u.level === "Superadmin" ? ALL_TABS : u.tabs;
+  if (actor.level !== "Superadmin" && (u.level !== "View" || !tabs.every((t) => actor.tabs.includes(t)))) throw new HttpError(403, "Anda tidak berhak mengirim ke pengguna ini.");
+  const umatId = Array.isArray(f[AF.umat]) ? String(f[AF.umat][0] || "") : "";
+  if (!umatId) throw new HttpError(400, "Pengguna ini belum tertaut ke data umat, jadi nomor WA tidak diketahui.");
+  const um = await getRecord(BASE_BPK, T.umat, umatId);
+  const wa = waDigits(um.fields[UF.wa]);
+  if (!wa) throw new HttpError(400, "Nomor WA umat ini belum ada atau tidak valid.");
+  const last = sentAt.get(id) || 0;
+  if (Date.now() - last < 60_000) throw new HttpError(429, "Pesan baru saja dikirim. Tunggu satu menit sebelum mengirim lagi.");
+  sentAt.set(id, Date.now());
+  const pesan = welcomeWa({ nama: u.nama, email: u.email, level: u.level, tabs, url: appUrl() || "https://e-pkk-one.vercel.app" });
+  try { await kirimWa(wa, pesan); } catch (e) { sentAt.delete(id); throw e; }
+  console.log("ADMIN kirimwa", selfEmail, "->", u.email, maskWa(wa));
+  return { ok: true, ke: maskWa(wa) };
+}
+
 const mustSuper = (a: Actor) => { if (a.level !== "Superadmin") throw new HttpError(403, "Khusus Superadmin."); };
 
 export async function adminCall(action: string, i: any, selfEmail: string, actor: Actor = SUPER) {
@@ -88,6 +115,7 @@ export async function adminCall(action: string, i: any, selfEmail: string, actor
     const pesan = welcomeWa({ nama: um.nama, email, level, tabs, url: appUrl() || "https://e-pkk-one.vercel.app" });
     return { user: toUser(j.records[0]), wa: um.wa || "", pesan };
   }
+  if (action === "kirimwa") return kirimWaPengguna(i, selfEmail, actor);
   mustSuper(actor);
   if (action === "list") return { users: await all() };
   if (action === "create") {

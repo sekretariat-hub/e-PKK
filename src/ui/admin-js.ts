@@ -54,6 +54,21 @@ export const ADMIN_JS = String.raw`
         ? EPK.el("button", { type: "button", class: "epk-btn bad", text: "Nonaktifkan", onclick: function () { save({ status: "Ditolak" }, "Dinonaktifkan."); } })
         : EPK.el("button", { type: "button", class: "epk-btn sec", text: "Aktifkan", onclick: function () { save({ status: "Disetujui" }, "Diaktifkan."); } }));
     }
+    if (u.status === "Disetujui") {
+      var waBtn = EPK.el("button", { type: "button", class: "epk-btn sec", text: "Kirim WA" }), armed = false, timer = null;
+      waBtn.onclick = function () {
+        if (!armed) {
+          armed = true; waBtn.textContent = "Klik lagi untuk kirim WA";
+          msg.say("Instruksi login akan dikirim ke nomor WA umat yang tertaut. Klik lagi untuk melanjutkan.");
+          timer = setTimeout(function () { armed = false; waBtn.textContent = "Kirim WA"; }, 5000);
+          return;
+        }
+        clearTimeout(timer); armed = false; waBtn.disabled = true; waBtn.textContent = "Mengirim…"; msg.say("Mengirim WA…");
+        api("kirimwa", { id: u.id }).then(function (r) { msg.say("WA instruksi login terkirim ke " + r.ke + "."); },
+          function (e) { msg.say(e.message, true); }).then(function () { waBtn.disabled = false; waBtn.textContent = "Kirim WA"; });
+      };
+      actions.push(waBtn);
+    }
     return EPK.el("div", { class: "epk-card" }, [
       EPK.el("h4", { text: (u.nama || "(tanpa nama)") + (u.jabatan ? " · " + u.jabatan : "") }),
       EPK.el("div", { class: "sub", text: u.email + " · " + u.status }),
