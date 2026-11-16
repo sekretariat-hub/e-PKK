@@ -1,25 +1,27 @@
 <title>Pengurus BPKPKK Bandung</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* Layout: one summary band (big count + breakdown bars), then a searchable directory table. */
 :root {
-  --bg: #f5f6f8;
-  --page: linear-gradient(180deg, #eceef1 0%, #f2f3f5 40%, #f7f8f9 100%);
+  --navy: #1E2F6B; --navy2: #2C418F; --red: #C62F2F; --gold: #E8B923;
+  --r: 16px; --sh: 0 1px 2px rgba(23,32,64,.04), 0 6px 20px rgba(23,32,64,.05);
+  --bg: #F6F5FA;
+  --page: radial-gradient(900px 400px at 8% -8%, #E4E9FA, transparent), radial-gradient(700px 420px at 100% 108%, #FBF1D8, transparent), #F6F5FA;
   --surface: #ffffff;
-  --fg: #16202a;
-  --muted: #5d6b79;
-  --line: #dde2e8;
-  --accent: #0f5c63;
-  --accent-soft: #dcecee;
+  --fg: #172040;
+  --muted: #66708F;
+  --line: #E6E9F3;
+  --accent: #1E2F6B;
+  --accent-soft: #E8ECF8;
   --warn: #9a5b00;
   --warn-soft: #fbeccf;
-  --t-inti: #0f5c63;
+  --t-inti: #1E2F6B;
   --t-harian: #3d6fb0;
   --t-kerja: #7a8aa0;
   --t-pleno: #b9c3cf;
-  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   --wa: #0f6b4d;
   --wa-soft: #d8f0e5;
@@ -29,18 +31,18 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #11171d; --page: linear-gradient(180deg, #14283d 0%, #121d2a 40%, #11171d 100%); --surface: #19212a; --fg: #e6ebf0; --muted: #98a6b4; --line: #2a3541;
-    --accent: #5cc0c8; --accent-soft: #1d3a3e; --warn: #f0b45a; --warn-soft: #3a2c12;
-    --t-inti: #5cc0c8; --t-harian: #6f9bd6; --t-kerja: #6c7b8d; --t-pleno: #3f4b59;
+    --bg: #11171d; --page: radial-gradient(900px 400px at 8% -8%, #1B2547, transparent), #11171d; --surface: #19212a; --fg: #e6ebf0; --muted: #98a6b4; --line: #2a3541;
+    --navy: #8FA4F0; --navy2: #A9B9F5; --red: #FF7A6B; --gold: #F2C94C; --accent: #8FA4F0; --accent-soft: #1D2750; --warn: #f0b45a; --warn-soft: #3a2c12;
+    --t-inti: #8FA4F0; --t-harian: #6f9bd6; --t-kerja: #6c7b8d; --t-pleno: #3f4b59;
     --wa: #5fd3a2; --wa-soft: #17382c; --danger: #ff8a80;
     --k0: #5cc0c8; --k1: #7aa5dc; --k2: #b095d8; --k3: #e49066; --k4: #6cc795; --k5: #e386ad; --k6: #d8b64f; --k7: #88a6b8; --k8: #9aa5b1;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #11171d; --page: linear-gradient(180deg, #14283d 0%, #121d2a 40%, #11171d 100%); --surface: #19212a; --fg: #e6ebf0; --muted: #98a6b4; --line: #2a3541;
-  --accent: #5cc0c8; --accent-soft: #1d3a3e; --warn: #f0b45a; --warn-soft: #3a2c12;
-  --t-inti: #5cc0c8; --t-harian: #6f9bd6; --t-kerja: #6c7b8d; --t-pleno: #3f4b59;
+  --bg: #11171d; --page: radial-gradient(900px 400px at 8% -8%, #1B2547, transparent), #11171d; --surface: #19212a; --fg: #e6ebf0; --muted: #98a6b4; --line: #2a3541;
+  --navy: #8FA4F0; --navy2: #A9B9F5; --red: #FF7A6B; --gold: #F2C94C; --accent: #8FA4F0; --accent-soft: #1D2750; --warn: #f0b45a; --warn-soft: #3a2c12;
+  --t-inti: #8FA4F0; --t-harian: #6f9bd6; --t-kerja: #6c7b8d; --t-pleno: #3f4b59;
   --wa: #5fd3a2; --wa-soft: #17382c; --danger: #ff8a80;
     --k0: #5cc0c8; --k1: #7aa5dc; --k2: #b095d8; --k3: #e49066; --k4: #6cc795; --k5: #e386ad; --k6: #d8b64f; --k7: #88a6b8; --k8: #9aa5b1;
   color-scheme: dark;
@@ -49,7 +51,7 @@
 body {
   background: var(--bg); background-image: var(--page); background-attachment: fixed; min-height: 100vh; color: var(--fg);
   font-family: var(--font-body); font-size: 15px; line-height: 1.5;
-  padding-block: 28px 48px;
+  padding-block: 16px 48px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
