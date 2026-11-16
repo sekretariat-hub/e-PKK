@@ -36,3 +36,16 @@ describe("tema BPN: sidebar bergrup", () => {
     for (const t of ["inventaris", "keuangan", "proker", "admin"]) expect(a).toBeLessThan(at(`id="tabbtn-${t}"`));
   });
 });
+
+describe("tema BPN: komponen", () => {
+  const html = renderDashboard(acc);
+  it("kartu angka punya lingkaran pastel di pojok dan kartu memakai radius var(--r)", () => {
+    expect(html).toContain(".tile::after");
+    expect(html).toContain(".summary { border-radius: var(--r)");
+  });
+  it("tombol utama navy dengan hover navy2, input membulat 12px", () => {
+    expect(html).toContain(".btn.primary { background: var(--navy)");
+    expect(html).toContain(".btn.primary:hover:not(:disabled) { background: var(--navy2)");
+    expect(html).toContain(".fil input[type=\"search\"], .fil select, .dlg input, .dlg textarea, .dlg select { border-radius: 12px");
+  });
+});
