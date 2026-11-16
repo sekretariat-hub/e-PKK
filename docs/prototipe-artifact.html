@@ -370,13 +370,22 @@ footer { color: var(--muted); font-size: 13px; }
 }
 @media (prefers-reduced-motion: no-preference) { .chip { transition: background .15s, border-color .15s; } }
 .wrap { max-width: 1240px; }
-.shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 20px; align-items: start; }
+.shell { display: grid; grid-template-columns: 252px minmax(0, 1fr); gap: 20px; align-items: start; }
 .shell.collapsed { grid-template-columns: minmax(0, 1fr); }
 .shell.collapsed .side { display: none; }
 .main { display: grid; gap: 20px; min-width: 0; }
-.side.tabs { position: sticky; top: 12px; flex-direction: column; gap: 2px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px; overflow: visible; }
-.side .tabbtn { text-align: left; white-space: normal; border: 0; border-left: 3px solid transparent; border-radius: 6px; margin: 0; padding: 10px 12px; }
-.side .tabbtn[aria-selected="true"] { background: var(--accent-soft); border-left-color: var(--accent); }
+.side.tabs { position: sticky; top: 12px; max-height: calc(100vh - 24px); flex-direction: column; gap: 3px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); box-shadow: var(--sh); padding: 14px 12px; overflow-y: auto; }
+.sidebrand { display: flex; gap: 10px; align-items: center; padding: 2px 6px 12px; }
+.sidebrand .logo { width: 44px; height: 44px; flex: none; object-fit: contain; }
+.sidebrand b { display: block; font-size: 13.5px; line-height: 1.2; color: var(--navy); letter-spacing: .01em; } .sidebrand span { font-size: 11px; color: var(--muted); }
+.navgrp { margin: 12px 8px 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); } .navgrp[hidden] { display: none; }
+.sideme { margin-top: auto; padding: 12px; border-radius: 14px; background: var(--bg); display: flex; gap: 10px; align-items: center; } .sideme[hidden] { display: none; }
+.sideme .av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; background: var(--navy); flex: none; }
+.sideme b { display: block; font-size: 13px; line-height: 1.2; overflow-wrap: anywhere; } .sideme small { color: var(--muted); font-size: 11.5px; }
+@media (min-width: 861px) { header.brand .logo { display: none; } }
+.side .tabbtn { text-align: left; white-space: normal; border: 0; border-radius: 12px; margin: 0; padding: 10px 12px; font-weight: 600; font-size: 14px; color: var(--fg); position: relative; }
+.side .tabbtn:hover { background: var(--accent-soft); color: var(--fg); }
+.side .tabbtn[aria-selected="true"] { background: var(--navy); color: #fff; box-shadow: 0 6px 14px rgba(30,47,107,.25); } .side .tabbtn[aria-selected="true"]::after { content: ""; position: absolute; right: 12px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--gold); }
 .sidetgl { justify-self: start; }
 .sideback { display: none; }
 @media (max-width: 860px) {
@@ -441,16 +450,22 @@ body.sep img.logo { width: 120px; height: 120px; object-fit: contain; } @media (
   <button type="button" class="btn sidetgl" id="sideToggle" aria-controls="side" aria-expanded="true">☰ Menu</button>
   <div class="shell" id="shell">
   <nav class="tabs side" id="side" role="tablist" aria-label="Menu" aria-orientation="vertical">
+    <div class="sidebrand" role="presentation"><img class="logo" id="sideLogo" src="/logo.png" alt="" width="44" height="44"><div><b>BPK PKK Bandung</b><span>Sistem Informasi</span></div></div>
+    <div class="navgrp" role="presentation" data-grp="utama">Utama</div>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-beranda" aria-controls="tab-beranda" aria-selected="true" data-tab="beranda">Dashboard</button>
+    <div class="navgrp" role="presentation" data-grp="pelayanan">Pelayanan</div>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-pengurus" aria-controls="tab-pengurus" aria-selected="false" tabindex="-1" data-tab="pengurus">Pengurus</button>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-pewarta" aria-controls="tab-pewarta" aria-selected="false" tabindex="-1" data-tab="pewarta">Pewarta, pengajar &amp; konselor</button>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-luar" aria-controls="tab-luar" aria-selected="false" tabindex="-1" data-tab="luar">Pewarta luar kota</button>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-pd" aria-controls="tab-pd" aria-selected="false" tabindex="-1" data-tab="pd">PD / Komunitas</button>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-umat" aria-controls="tab-umat" aria-selected="false" tabindex="-1" data-tab="umat">Umat</button>
+    <div class="navgrp" role="presentation" data-grp="kegiatan">Kegiatan &amp; program</div>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-kalender" aria-controls="tab-kalender" aria-selected="false" tabindex="-1" data-tab="kalender">Kalender kegiatan</button>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-event" aria-controls="tab-event" aria-selected="false" tabindex="-1" data-tab="event">Event &amp; pendaftar</button>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-kep" aria-controls="tab-kep" aria-selected="false" tabindex="-1" data-tab="kep">KEP</button>
+    <div class="navgrp" role="presentation" data-grp="admin">Administrasi</div>
     <button type="button" class="tabbtn" role="tab" id="tabbtn-admin" aria-controls="tab-admin" aria-selected="false" tabindex="-1" data-tab="admin">Administrasi pengguna</button>
+    <div class="sideme" role="presentation" id="sideMe"></div>
   </nav>
   <div class="sideback" id="sideBack"></div>
   <div class="main">
@@ -1602,10 +1617,31 @@ document.addEventListener("click", function (e) {
 });
 function brandFor(sep) {
   var l = document.getElementById("brandLogo"), a = document.getElementById("brandH1"), b = document.getElementById("brandSub");
+  var sl = document.getElementById("sideLogo"); if (sl) sl.src = sep ? "/logo-elshaddai.png" : "/logo.png";
   l.src = sep ? "/logo-elshaddai.png" : "/logo.png"; l.alt = sep ? "Logo El Shaddai Training Center" : "Logo BPK Keuskupan Bandung";
   a.textContent = sep ? "@SEP" : "BPKPKK Bandung"; b.textContent = sep ? "SISTEM INFORMASI EVANGELISASI PRIBADI" : "Data pengurus dan kalender kegiatan, dibaca dari Airtable BPK Bandung.";
   document.title = sep ? "@SEP" : "Pengurus BPKPKK Bandung";
   document.body.classList.toggle("sep", !!sep);
+}
+function syncNavGroups() {
+  var side = document.getElementById("side"); if (!side) return;
+  var grp = null, n = 0;
+  function close() { if (grp) grp.hidden = n === 0; }
+  Array.prototype.forEach.call(side.children, function (c) {
+    if (c.classList.contains("navgrp")) { close(); grp = c; n = 0; }
+    else if (c.classList.contains("tabbtn") && !c.hidden) n++;
+  });
+  close();
+  var me = window.__ME__, box = document.getElementById("sideMe");
+  if (me && box) {
+    var nm = me.nama || me.email || "";
+    var lv = me.level === "Superadmin" ? "Superadmin" : me.level === "Admin" ? "Admin" : me.level === "Edit" ? "Akses edit" : "Hanya lihat";
+    box.textContent = "";
+    var av = document.createElement("span"); av.className = "av"; av.textContent = (nm.trim()[0] || "?").toUpperCase();
+    var tx = document.createElement("span"), b = document.createElement("b"), s = document.createElement("small");
+    b.textContent = nm; s.textContent = lv; tx.appendChild(b); tx.appendChild(s);
+    box.appendChild(av); box.appendChild(tx); box.hidden = !nm;
+  }
 }
 function showTab(name) {
   if (TABS.indexOf(name) < 0) name = "beranda";
@@ -1617,6 +1653,7 @@ function showTab(name) {
     b.setAttribute("aria-selected", t === name ? "true" : "false");
     b.tabIndex = t === name ? 0 : -1;
   });
+  syncNavGroups();
   if (name === "kalender") calOpen();
   else if (name === "event" || name === "kep") { if (mcpState === "ready") ensureEvt(); }
   else if (mcpState === "ready") { ensureData(); if (name === "umat") ensureUa(false); if (name === "beranda" && navOk("event")) ensureEvt(); }

@@ -16,3 +16,23 @@ describe("tema BPN: token warna dan font", () => {
     expect(html).not.toContain("--accent: #0f5c63");
   });
 });
+
+describe("tema BPN: sidebar bergrup", () => {
+  const html = renderDashboard({ ...acc, tabs: ["Dashboard"] });
+  const at = (s: string) => { const i = html.indexOf(s); expect(i, s).toBeGreaterThan(-1); return i; };
+  it("punya blok merek, kartu pengguna, dan fungsi penyembunyi grup kosong", () => {
+    expect(html).toContain('class="sidebrand"');
+    expect(html).toContain('class="sideme"');
+    expect(html).toContain("function syncNavGroups");
+  });
+  it("urutan grup dan menu: Utama, Pelayanan, Kegiatan, Administrasi", () => {
+    const u = at('data-grp="utama"'), p = at('data-grp="pelayanan"'), k = at('data-grp="kegiatan"'), a = at('data-grp="admin"');
+    expect(u).toBeLessThan(at('id="tabbtn-beranda"'));
+    expect(at('id="tabbtn-beranda"')).toBeLessThan(p);
+    expect(p).toBeLessThan(at('id="tabbtn-pengurus"'));
+    expect(at('id="tabbtn-umat"')).toBeLessThan(k);
+    expect(k).toBeLessThan(at('id="tabbtn-kalender"'));
+    expect(at('id="tabbtn-kep"')).toBeLessThan(a);
+    for (const t of ["inventaris", "keuangan", "proker", "admin"]) expect(a).toBeLessThan(at(`id="tabbtn-${t}"`));
+  });
+});
