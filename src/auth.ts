@@ -5,6 +5,7 @@ import { registerLogin } from "@/lib/access";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google],
   trustHost: true,
+  redirectProxyUrl: process.env.AUTH_REDIRECT_PROXY_URL,
   session: { strategy: "jwt", maxAge: 60 * 60 * 12 },
   pages: { signIn: "/masuk" },
   callbacks: {
