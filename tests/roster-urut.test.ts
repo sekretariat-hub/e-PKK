@@ -35,3 +35,13 @@ describe("popup Umat: jabatan di BPK", () => {
     expect(html).toContain('esc(jabA.length ? jabA.join(", ") : one(v[PV.jabBpk]))');
   });
 });
+
+describe("urutan sesama jabatan menurut No", () => {
+  it("jabatan yang sama diurutkan menurut field No Pengurus BPK, dan dibaca dari Airtable", () => {
+    const html = readFileSync("docs/prototipe-artifact.html", "utf8");
+    expect(html).toContain('var F_PNG_NO = "fldGMEQMFCzzJEVAS"');
+    expect(html).toContain("F_PNG_GRUP, F_PNG_NO]");
+    expect(html).toContain("a.ck.localeCompare(b.ck) || (a.no - b.no)");
+    expect(html).toContain("(a.ck || a.nama).localeCompare(b.ck || b.nama)");
+  });
+});
