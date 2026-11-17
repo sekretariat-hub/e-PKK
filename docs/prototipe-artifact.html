@@ -1844,8 +1844,7 @@ document.getElementById("calToday").addEventListener("click", function () { cal.
 
 function evTime(e) { return e.mulai && !e.libur ? fmtTime(e.mulai) : ""; }
 function chipHtml(e) {
-  var t = evTime(e);
-  return '<button type="button" class="ev c' + kelIdx(e.kelompok) + (e.batal ? " batal" : "") + (e.libur ? " libur" : "") + (e.past ? " past" : "") + '" data-id="' + e.id + '" title="' + esc(e.nama) + '"><i></i><span class="tx">' + esc(e.nama) + "</span>" + (t ? '<span class="tm">' + t + "</span>" : "") + "</button>";
+  return '<button type="button" class="ev c' + kelIdx(e.kelompok) + (e.batal ? " batal" : "") + (e.libur ? " libur" : "") + (e.past ? " past" : "") + '" data-id="' + e.id + '" title="' + esc(e.nama) + '"><i></i><span class="tx">' + esc(e.nama) + "</span>" + "</button>";
 }
 function planTag(e) {
   if (e.batal) return '<span class="tag k0">Batal</span>';
