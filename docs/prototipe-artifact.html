@@ -3766,8 +3766,8 @@ function renderEvDetail(e, regs) {
   var h = '<div class="evhead"><div><h3>' + esc(e.nama.replace(/^\d{6}-/, "")) + '</h3><p class="sub">' + esc(fmtDate(e.tgl, { weekday: "long", day: "numeric", month: "long", year: "numeric" })) + (e.lokasi ? " · " + esc(e.lokasi) : "") + "</p></div>";
   var va = !!(window.__ME__ && window.__ME__.viewAs);
   h += '<div class="evact">' + (e.tgl === TODAY ? '<span class="tag live" data-live-b="' + esc(e.id) + '">● Live</span>' : "") +
-    '<button type="button" class="chip" data-absen="' + esc(e.id) + '"' + (va ? " disabled" : "") + '>Link absensi</button></div></div>' +
-    '<p class="note" id="absenMsg">' + (va ? "Tidak tersedia di mode Lihat sebagai. Kembali ke akun Anda untuk membuat link." : "") + "</p>";
+    '<button type="button" class="chip" data-daftar="' + esc(e.id) + '"' + (va ? " disabled" : "") + '>Link pendaftaran</button> <button type="button" class="chip" data-absen="' + esc(e.id) + '"' + (va ? " disabled" : "") + '>Link absensi</button></div></div>' +
+    '<p class="note" id="daftarMsg"></p><p class="note" id="absenMsg">' + (va ? "Tidak tersedia di mode Lihat sebagai. Kembali ke akun Anda untuk membuat link." : "") + "</p>";
   h += '<div class="tiles sm">' + tile(regs.length, "Pendaftar", batal ? batal + " batal tidak dihitung" : "aktif") + tile(done.length + "/" + pdActive.length, "PD mendaftar", miss.length + " PD belum") + tile(bayar, "Confirmed / Paid", "divalidasi: " + vald) + "</div>";
   var tabs = [["daftar", "Pendaftar", regs.length], ["demo", "Demografi"], ["pd", "Per PD", done.length], ["belum", "Belum mendaftar", miss.length], ["seksi", "Per seksi"]];
   h += '<div class="evtabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-evtab="' + t[0] + '"' + (t[0] === "seksi" ? ' title="Laporan perwakilan per seksi"' : "") + ' aria-selected="' + (tab === t[0]) + '">' + t[1] + (t[2] !== undefined ? " <em>" + t[2] + "</em>" : "") + "</button>"; }).join("") + "</div>";
@@ -3842,6 +3842,15 @@ document.getElementById("tab-event").addEventListener("click", function (e) {
   if (sk) { var sp = sk.getAttribute("data-seksi").split("|"); SK.f = ""; skLoad(sp[0], sp[1]); return; }
   var cp = e.target.closest && e.target.closest("[data-evcopy]");
   if (cp) { try { navigator.clipboard.writeText(cp.getAttribute("data-evcopy")); cp.textContent = "Tersalin ✓"; } catch (x) { prompt("Salin link:", cp.getAttribute("data-evcopy")); } return; }
+  var dfb = e.target.closest && e.target.closest("[data-daftar]");
+  if (dfb) {
+    var dm = document.getElementById("daftarMsg"), did = dfb.getAttribute("data-daftar");
+    fetch("/api/daftar-event", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ aksi: "link", event: did }) }).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || "Gagal."); return j; }); }).then(function (j) {
+      var u = location.origin + "/daftar-event/" + j.token;
+      if (dm) dm.innerHTML = 'Link pendaftaran: <a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(u) + '</a> <button type="button" class="chip" data-evcopy="' + esc(u) + '">Salin</button> <a class="chip" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent("Pendaftaran event:\n" + u) + '">Bagikan lewat WhatsApp</a><br><small>Terbuka untuk umum. Tutup otomatis sesuai batas registrasi event.</small>';
+    }, function (x) { if (dm) dm.textContent = x.message; });
+    return;
+  }
   var ab = e.target.closest && e.target.closest("[data-absen]");
   if (ab) {
     var am = document.getElementById("absenMsg"), eid = ab.getAttribute("data-absen");
