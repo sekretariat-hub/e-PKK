@@ -477,6 +477,7 @@ header p { font-size: 13px; }
 #evRegs thead th, .evpane[data-evpane="pd"] thead th { position: sticky; top: 0; background: var(--surface); }
 @media (max-width: 700px) { .evdetail .tiles.sm { grid-template-columns: repeat(3, minmax(0, 1fr)); } .evdetail .tiles.sm .tile small { display: none; } }
 .mb{display:grid;gap:6px}.mb-r{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.dlg .lbl{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-top:8px}.regopt{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}.regopt label{display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:400;color:var(--fg);font-size:14px}.regopt input{width:auto;margin:0}
 </style>
 
 <div class="wrap">
@@ -880,6 +881,12 @@ header p { font-size: 13px; }
     <div class="two">
       <div class="fld"><label for="a_regBuka">Buka registrasi (tanggal &amp; jam)</label><input id="a_regBuka" type="datetime-local"></div>
       <div class="fld"><label for="a_regTutup">Tutup registrasi (tanggal &amp; jam)</label><input id="a_regTutup" type="datetime-local"></div>
+    </div>
+    <div class="fld"><span class="lbl" id="a_regLbl">Registrasi</span>
+      <div class="regopt" role="radiogroup" aria-labelledby="a_regLbl">
+        <label><input type="radio" name="a_reg" value="Open Registration"> Open Registration</label>
+        <label><input type="radio" name="a_reg" value="Closed"> Closed</label>
+      </div>
     </div>
     <label for="a_lokasi">Lokasi</label>
     <input id="a_lokasi" type="text" autocomplete="off">
@@ -1982,6 +1989,7 @@ function openAdd(dateKey, opener) {
   ["a_kel", "a_jenis", "a_sifat"].forEach(function (id) { document.getElementById(id).value = ""; });
   document.getElementById("a_plan").value = "Planned";
   document.getElementById("a_regBuka").value = ""; document.getElementById("a_regTutup").value = "";
+  setRegOpt("");
   Array.prototype.forEach.call(document.querySelectorAll("#a_und input"), function (c) { c.checked = false; });
   addSave.disabled = false; setAddMsg("");
   showScrim("addScrim", opener);
@@ -1989,6 +1997,7 @@ function openAdd(dateKey, opener) {
 }
 function hhmm(iso) { if (!iso || isNaN(new Date(iso))) return ""; var d = new Date(iso); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 function dtLocal(iso) { if (!iso || isNaN(new Date(iso))) return ""; var d = new Date(iso); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+function setRegOpt(val) { Array.prototype.forEach.call(document.querySelectorAll('input[name="a_reg"]'), function (r) { r.checked = r.value === val; }); }
 function openEdit(id, opener) {
   var e = evById(id); if (!e || !mcp) return;
   hideScrim("evScrim"); editId = id;
@@ -2000,7 +2009,7 @@ function openEdit(id, opener) {
   set("a_tglSel", d2 && d2 !== e.date ? d2 : ""); set("a_selesai", hhmm(e.selesai));
   set("a_lokasi", e.lokasi); set("a_kel", e.kelompok); set("a_jenis", e.jenis); set("a_sifat", e.sifat); set("a_plan", e.plan || "Planned");
   set("a_peng", e.pengundang); set("a_pic", e.pic); set("a_telp", e.telp);
-  set("a_regBuka", dtLocal(e.regBuka)); set("a_regTutup", dtLocal(e.regTutup));
+  set("a_regBuka", dtLocal(e.regBuka)); set("a_regTutup", dtLocal(e.regTutup)); setRegOpt(e.reg);
   Array.prototype.forEach.call(document.querySelectorAll("#a_und input"), function (c) { c.checked = e.undangan.indexOf(c.value) >= 0; });
   addSave.disabled = false; setAddMsg("");
   showScrim("addScrim", opener);
@@ -2028,6 +2037,8 @@ document.getElementById("addForm").addEventListener("submit", function (e) {
   f[EF.nama] = nama; f[EF.tgl] = tgl;
   if (rb) f[EF.regBuka] = new Date(rb).toISOString(); else if (editId) f[EF.regBuka] = null;
   if (rt) f[EF.regTutup] = new Date(rt).toISOString(); else if (editId) f[EF.regTutup] = null;
+  var regSel = document.querySelector('input[name="a_reg"]:checked');
+  if (regSel) f[EF.reg] = regSel.value;
   if (start) f[EF.mulai] = start;
   if (end) f[EF.selesai] = end;
   var map = [[EF.lokasi, "a_lokasi"], [EF.kelompok, "a_kel"], [EF.jenis, "a_jenis"], [EF.sifat, "a_sifat"], [EF.plan, "a_plan"], [EF.pengundang, "a_peng"], [EF.pic, "a_pic"], [EF.telp, "a_telp"]];
