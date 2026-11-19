@@ -410,6 +410,8 @@ footer { color: var(--muted); font-size: 13px; }
 .drill { margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); } .drill h4 { margin: 0 0 8px; font-size: 14px; }
 .pdw { display: flex; flex-wrap: wrap; gap: 8px; } .pdi { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 4px 3px 12px; font-size: 13.5px; background: var(--surface); }
 .pdi .act { border-radius: 999px; padding: 5px 7px; }
+.pdi[hidden] { display: none; }
+.chip em { font-style: normal; opacity: .75; margin-left: 2px; font-variant-numeric: tabular-nums; }
 .tile.tunggu { background: color-mix(in srgb, var(--warn) 14%, var(--surface)); border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); } .tile.tunggu b { color: var(--warn); } .tile.tunggu.nol { background: var(--surface); border-color: var(--line); } .tile.tunggu.nol b { color: var(--muted); }
 .tile.go { font: inherit; color: inherit; text-align: left; cursor: pointer; width: 100%; } .tile.go:hover, .tile.go:focus-visible { border-color: var(--accent); } .tile.go.on { border-color: var(--accent); background: var(--accent-soft); }
 .bcol[data-nav] { cursor: pointer; } .bcol[data-nav]:hover .bl { color: var(--accent); }
@@ -2365,7 +2367,7 @@ function nav(spec) {
   else if (k === "pw") { pw.view = v; goTab("pewarta"); renderPewarta(); }
   else if (k === "pwf") { var kv = v.split("|"); pwFilterGo(kv[0], kv.slice(1).join("|")); }
   else if (k === "cal") { var m = v.split("-"); cal.y = +m[0]; cal.m = +m[1] - 1; goTab("kalender"); }
-  else if (k === "evt") { EV.sel = v; EV.waktu = "all"; EV.open = true; EV.tab = "daftar"; EV.dim = -1; EV.dv = ""; EV.pdf = ""; EV.rq = ""; goTab("event"); renderEvent(); }
+  else if (k === "evt") { EV.sel = v; EV.waktu = "all"; EV.open = true; EV.tab = "daftar"; EV.bk = "semua"; EV.dim = -1; EV.dv = ""; EV.pdf = ""; EV.rq = ""; goTab("event"); renderEvent(); }
   else if (k === "dash" && v === "appr") openApprAdmin(document.activeElement);
   else if (k === "dash") openDash(v, document.activeElement);
   else if (k === "evd") { goTab("kalender"); openEv(v, null); }
@@ -3013,6 +3015,13 @@ var JABAR = [[106.85, -6.02], [107.35, -5.97], [107.85, -6.22], [108.30, -6.30],
 var KOTA_XY = { Bandung: [107.61, -6.91], Cimahi: [107.50, -6.86], Garut: [107.90, -7.22], Cirebon: [108.55, -6.71], Tasikmalaya: [108.22, -7.33], Jatibarang: [108.31, -6.47], Karawang: [107.31, -6.32], Subang: [107.76, -6.57], Pamanukan: [107.82, -6.28], Cigugur: [108.52, -7.02], Kuningan: [108.47, -6.95], Ciledug: [108.74, -6.80], Purwakarta: [107.44, -6.56], "Kadipaten Majalengka": [108.17, -6.77], Cikampek: [107.46, -6.41] };
 function proj(ll) { return [(ll[0] - 106.3) / 2.6 * 600, (-5.9 - ll[1]) / 2.0 * 460]; }
 function pdCity(p) { return p.kota[0] || ""; }
+/* kelompok kota untuk tab Belum mendaftar: dalam kota = Bandung Raya (Kota Bandung, Cimahi, Kab. Bandung, Bandung Barat) */
+var DALAM_KOTA = ["bandung", "kota bandung", "cimahi", "kota cimahi", "kabupaten bandung", "kab. bandung", "kab bandung", "bandung barat", "kabupaten bandung barat", "kab. bandung barat", "lembang"];
+function kotaGrup(p) {
+  var ks = (p.kota || []).map(function (k) { return String(k || "").trim().toLowerCase(); }).filter(Boolean);
+  if (!ks.length) return "kosong";
+  return ks.some(function (k) { return DALAM_KOTA.indexOf(k) >= 0; }) ? "dalam" : "luar";
+}
 function renderPdMap(pd) {
   var by = {}, other = 0;
   pd.forEach(function (p) {
@@ -3287,7 +3296,7 @@ document.getElementById("uaBody").addEventListener("click", function (e) {
 var T_PEND = "tbltiJ1qDJEwfWPLg";
 var PF = { ev: "flduf15moMpZSklGL", nama: "fld9ucFxEU0cUSHWw", pd: "fldMBf67dQxv51kY1", dek: "fldAZzqERt3oFHRRx", jk: "fldylW3JpqB1DJ0Fh", usia: "fldArgqtlZOnnRIvX", nikah: "fldmecbafGeLtqCSd", kat: "fldIgnkqdrDPz8gCV", st: "fldNGGEcwHqIsQPct", val: "fldqB6h9rzzC5VhKI", inap: "fldCqIqQmVnFXqrOU", hadir: "fldcpfpO2QvPGmgd7" };
 var EVX = { nama: "fld0d9tIyi4nyTZsM", tgl: "fldoIkx9wLMaKOa38", st: "fldHs8NnkUlEXDqLy", reg: "fldUqEnDI4GCqdwAk", jenis: "fldrYLgd8LCDjwmLZ", kel: "fldhgv2WlvqytF6zA", lokasi: "fldY0qw1v0a4fK9Sp", link: "fldyZyxxhZXUjhrqa", msg: "fldbLYDWk87mIC9yV", pic: "fldROaJ8rPAZQPTED", telp: "fld4qestIo5EjWAvk" };
-var EV = { tab: "daftar", limit: 10, sel: "", waktu: "next", q: "", pdf: "", rq: "", open: false, dim: -1, dv: "", want: "", msg: "" };
+var EV = { tab: "daftar", bk: "semua", limit: 10, sel: "", waktu: "next", q: "", pdf: "", rq: "", open: false, dim: -1, dv: "", want: "", msg: "" };
 SRC_LABEL.evx = "Event"; SRC_LABEL.pend = "Pendaftaran event";
 function loadEvx() {
   return fetchAll(BASE, T_EVENTS, Object.keys(EVX).map(function (k) { return EVX[k]; })).then(function (recs) {
@@ -3787,18 +3796,32 @@ function renderEvDetail(e, regs) {
   h += pane("demo", '<p class="hint">Klik batang untuk menyaring daftar pendaftar.</p><div class="dgrid">' + dims.map(function (d, i) { return hbars(d[0], tally(regs, function (p) { return d[1](p) || "Belum diisi"; }), d[2], i); }).join("") + "</div>");
   h += pane("pd", '<p class="hint">Klik baris untuk melihat nama pendaftar.</p><div class="tw"><table class="tbl"><thead><tr><th>PD / Komunitas</th><th>Dekanat</th><th class="num">Pendaftar</th></tr></thead><tbody>' +
     rows.map(function (r) { return '<tr class="clk" data-prow tabindex="0" aria-expanded="false"><td>▸ ' + esc(r.n) + "</td><td>" + esc(r.d.replace(/^Dekanat /, "")) + '</td><td class="num">' + r.l.length + '</td></tr><tr class="det" hidden><td colspan="3">' + personTags(r.l) + "</td></tr>"; }).join("") + "</tbody></table></div>");
+  var bk = EV.bk || "semua";
+  var kcnt = { dalam: 0, luar: 0, kosong: 0 }; miss.forEach(function (p) { kcnt[kotaGrup(p)]++; });
+  var bkTabs = [["semua", "Semua", miss.length], ["dalam", "Dalam kota", kcnt.dalam], ["luar", "Luar kota", kcnt.luar], ["kosong", "Kota belum diisi", kcnt.kosong]];
   h += pane("belum", '<p class="hint">Ikon WA mengirim info event dan ajakan mendaftar ke koordinator PD.</p>' +
-    (miss.length ? '<div class="pdw">' + miss.map(function (p, i) {
-      var num = waNumber(p.koorWa), name = esc(p.nama);
+    (miss.length ? '<div class="chips" id="evBkChips" role="group" aria-label="Filter lokasi PD" style="margin-bottom:10px">' + bkTabs.map(function (t) {
+      return '<button type="button" class="chip" data-bk="' + t[0] + '" aria-pressed="' + (bk === t[0]) + '">' + t[1] + " <em>" + t[2] + "</em></button>";
+    }).join("") + "</div>" +
+    '<div class="pdw">' + miss.map(function (p, i) {
+      var num = waNumber(p.koorWa), name = esc(p.nama), g = kotaGrup(p);
       var wa = num ? '<a class="act wa" href="https://wa.me/' + num + "?text=" + encodeURIComponent(EVMSG(e, p)) + '" target="_blank" rel="noopener" aria-label="Kirim WA ke koordinator ' + name + '" title="WA koordinator' + (p.koor ? ": " + esc(p.koor.replace(/\s+/g, " ")) : "") + '">' + ICON_WA + "</a>" : '<button type="button" class="act" disabled title="Nomor WA koordinator belum ada" aria-label="Nomor WA koordinator ' + name + ' belum ada">' + ICON_WA + "</button>";
-      return '<span class="pdi"><span>' + name + "</span>" + wa + "</span>";
-    }).join("") + "</div>" : '<p class="note">Semua PD aktif sudah ada pendaftarnya.</p>'));
+      return '<span class="pdi" data-kgrp="' + g + '"' + (bk === "semua" || bk === g ? "" : " hidden") + "><span>" + name + "</span>" + wa + "</span>";
+    }).join("") + '</div><p class="note" id="evBkNone" hidden>Tidak ada PD pada kelompok ini.</p>' : '<p class="note">Semua PD aktif sudah ada pendaftarnya.</p>'));
   h += pane("seksi", '<div id="evSeksi"><p class="hint">Memuat laporan per seksi…</p></div>');
   el.innerHTML = h;
   el._regs = regs;
   el._eid = e.id;
   if (tab === "seksi") { if (SK.eid === e.id && SK.data) skDraw(e.id); else skLoad(e.id, e.tgl < TODAY ? "hadir" : "daftar"); }
   renderEvRegs();
+}
+function setEvBk(k) {
+  var el = document.getElementById("evDetail"); if (!el) return;
+  EV.bk = k;
+  Array.prototype.forEach.call(el.querySelectorAll("[data-bk]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-bk") === k)); });
+  var n = 0;
+  Array.prototype.forEach.call(el.querySelectorAll("[data-kgrp]"), function (i) { var on = k === "semua" || i.getAttribute("data-kgrp") === k; i.hidden = !on; if (on) n++; });
+  var none = document.getElementById("evBkNone"); if (none) none.hidden = n > 0;
 }
 function setEvTab(k) {
   var el = document.getElementById("evDetail"); if (!el) return;
@@ -3825,6 +3848,8 @@ function renderEvRegs() {
 document.getElementById("tab-event").addEventListener("click", function (e) {
   var evt = e.target.closest && e.target.closest("[data-evtab]");
   if (evt) { setEvTab(evt.getAttribute("data-evtab")); return; }
+  var bkb = e.target.closest && e.target.closest("[data-bk]");
+  if (bkb) { setEvBk(bkb.getAttribute("data-bk")); return; }
   var pdl = e.target.closest && e.target.closest("[data-pdel]");
   if (pdl) {
     var pid = pdl.getAttribute("data-pdel"), pnm = pdl.getAttribute("data-nm"), pm = document.getElementById("pdelMsg");
@@ -3852,7 +3877,7 @@ document.getElementById("tab-event").addEventListener("click", function (e) {
     return;
   }
   var b = e.target.closest && e.target.closest("[data-ev]");
-  if (b) { EV.sel = b.getAttribute("data-ev"); EV.tab = "daftar"; EV.pdf = ""; EV.rq = ""; EV.dim = -1; EV.dv = ""; EV.open = true; renderEvent(); window.scrollTo(0, 0); }
+  if (b) { EV.sel = b.getAttribute("data-ev"); EV.tab = "daftar"; EV.bk = "semua"; EV.pdf = ""; EV.rq = ""; EV.dim = -1; EV.dv = ""; EV.open = true; renderEvent(); window.scrollTo(0, 0); }
   if (e.target.closest && e.target.closest("#evBack")) { EV.open = false; renderEvent(); window.scrollTo(0, 0); }
   if (e.target.closest && e.target.closest("[data-evclr]")) { EV.dim = -1; EV.dv = ""; renderEvRegs(); }
   if (e.target.closest && e.target.closest("[data-act=srcretry]")) ensureEvt(true);
