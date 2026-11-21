@@ -18,7 +18,7 @@ beforeEach(() => {
 });
 
 describe("registerLogin: user baru", () => {
-  it("email baru: WA ke Sekretariat/Sekretaris dengan link halaman persetujuan, email Superadmin tetap dikirim", async () => {
+  it("email baru: WA ke Ketua Sekretariat dengan link halaman persetujuan, email Superadmin tetap dikirim", async () => {
     const { registerLogin } = await import("../src/lib/access");
     await registerLogin("Baru@X.com", "Budi");
     expect(notifySuperadmins).toHaveBeenCalledWith("baru@x.com", "Budi");

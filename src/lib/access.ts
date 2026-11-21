@@ -49,7 +49,7 @@ export async function registerLogin(email: string, name: string) {
   if (!id) {
     await at(`/v0/${BASE_BPK}/${T.pengguna}`, { method: "POST", body: JSON.stringify({ records: [{ fields: { [AF.email]: norm(email), [AF.nama]: name || "", [AF.status]: "Menunggu", [AF.level]: "View", [AF.login]: now } }] }) });
     try { await notifySuperadmins(norm(email), name || ""); } catch (e) { console.error("notif email gagal", e); }
-    // WA ke Sekretariat/Sekretaris: pengguna baru menunggu persetujuan. Gagal di sini tidak boleh menggagalkan login.
+    // WA ke Ketua Sekretariat: pengguna baru menunggu persetujuan. Gagal di sini tidak boleh menggagalkan login.
     try {
       await mintaApproval({
         jenis: "user", penerima: await emailsByJabatan(RE_APPROVER_USER),

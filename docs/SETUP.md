@@ -23,7 +23,7 @@
 
 ## WhatsApp persetujuan (e-pkk-beta dan produksi)
 Setiap permintaan persetujuan juga dikirim lewat WhatsApp (BaBlast) ke pemegang akun yang harus memutuskan, memuat link langsung ke e-PKK. Lonceng tetap ada.
-- **Penerima**: pengguna baru → Sekretariat dan Sekretaris; program kerja baru → Sekretaris Jenderal (pemutus tahap saat ini); permohonan pewarta luar kota → Sekretaris Jenderal; SEP/KEP baru dari PIC paroki → Tim SEP BPK (kegiatan berstatus "Menunggu Persetujuan" dan link pendaftarannya mati sampai disetujui). Pendaftar peserta SEP tidak memicu WA.
+- **Penerima**: pengguna baru → Ketua Sekretariat saja; program kerja baru → Sekretaris Jenderal (pemutus tahap saat ini); permohonan pewarta luar kota → Sekretaris Jenderal; SEP/KEP baru dari PIC paroki → Tim SEP BPK (kegiatan berstatus "Menunggu Persetujuan" dan link pendaftarannya mati sampai disetujui). Pendaftar peserta SEP tidak memicu WA.
 - **Environment variables yang wajib terisi** (Vercel, lalu Redeploy):
   - `BABLAST_API_KEY` (opsional `BABLAST_SENDER_CODE`, `BABLAST_API_URL`): tanpa ini WA tidak terkirim dan email peringatan dikirim.
   - `SMTP_USER` dan `SMTP_PASS`: dipakai juga untuk email peringatan bila WA gagal.

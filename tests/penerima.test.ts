@@ -19,6 +19,7 @@ beforeEach(() => {
     user("recCCCCCCCCCCCCCC", "tunggu@x.com", "Menunggu", "Sekretaris"),
     user("recDDDDDDDDDDDDDD", "sekjen@x.com", "Disetujui", "Sekretaris Jenderal"),
     user("recEEEEEEEEEEEEEE", "ketua@x.com", "Disetujui", "Ketua Seksi Musik"),
+    user("recKKKKKKKKKKKKKK", "ketsek@x.com", "Disetujui", "Ketua Sekretariat"),
     user("recHHHHHHHHHHHHHH", "gabung@x.com", "Disetujui", "Ketua Seksi Musik, Sekretariat"),
     user("recIIIIIIIIIIIIII", "forkom@x.com", "Disetujui", "Koordinator Forkom Doa"),
     user("recJJJJJJJJJJJJJJ", "koor@x.com", "Disetujui", "Koordinator BPKPKK Bandung"),
@@ -38,8 +39,8 @@ beforeEach(() => {
 describe("emailsByJabatan", () => {
   it("hanya akun Disetujui dengan jabatan cocok, huruf kecil, tanpa duplikat", async () => {
     const { emailsByJabatan, RE_APPROVER_USER } = await import("../src/lib/penerima");
-    // Sekretaris Jenderal bukan penerima persetujuan user baru; jabatan ganda dicek per jabatan.
-    expect(await emailsByJabatan(RE_APPROVER_USER)).toEqual(["sekre@x.com", "gabung@x.com"]);
+    // User baru: hanya Ketua Sekretariat (permintaan pemilik, 2026-11-21). Sekretaris, Sekretariat biasa, dan Sekjen bukan penerima.
+    expect(await emailsByJabatan(RE_APPROVER_USER)).toEqual(["ketsek@x.com"]);
   });
 
   it("RE_ALERT mencakup Sekretaris, Sekretaris Jenderal, dan Koordinator tetapi bukan ketua seksi", async () => {

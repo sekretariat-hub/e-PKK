@@ -5,8 +5,8 @@ import { AF, jabatanOf } from "./access";
 
 const UMAT_WA = "fldzY1Z2QvIIEkYXR";
 
-/** Penerima WA persetujuan user baru: Sekretariat dan Sekretaris (bukan Sekretaris Jenderal). Dicocokkan per jabatan. */
-export const RE_APPROVER_USER = /^(sekretaris|sekretariat|ketua sekretariat|sie sekretaris)$/i;
+/** Penerima WA persetujuan user baru: hanya Ketua Sekretariat (permintaan pemilik, 2026-11-21). Dicocokkan per jabatan, bukan alamat email. */
+export const RE_APPROVER_USER = /^ketua sekretariat$/i;
 /** Penerima email peringatan WA gagal: Sekretaris, Sekretaris Jenderal (termasuk ejaan "Jendral"), dan Koordinator BPK. */
 export const RE_ALERT = /^(sekretaris|sekretaris jende?ral|koordinator|koordinator bpkpkk bandung)$/i;
 
