@@ -1,7 +1,10 @@
 import { it, expect, vi, beforeEach } from "vitest";
 
+const lapor = vi.hoisted(() => vi.fn(async (_k: number, _m: string) => {}));
+vi.mock("@/lib/wa-alert", () => ({ laporWaGagal: lapor }));
+
 const KEY = "KUNCI-RAHASIA-TES-123";
-beforeEach(() => { vi.resetModules(); vi.unstubAllGlobals(); delete process.env.BABLAST_API_KEY; delete process.env.BABLAST_SENDER_CODE; delete process.env.BABLAST_API_URL; process.env.AIRTABLE_TOKEN = "x"; });
+beforeEach(() => { lapor.mockClear(); vi.resetModules(); vi.unstubAllGlobals(); delete process.env.BABLAST_API_KEY; delete process.env.BABLAST_SENDER_CODE; delete process.env.BABLAST_API_URL; process.env.AIRTABLE_TOKEN = "x"; });
 
 it("kirimWa: tanpa API key ditolak 503 dan tidak memanggil jaringan", async () => {
   const f = vi.fn(); vi.stubGlobal("fetch", f);
@@ -113,4 +116,19 @@ it("UI form login: kolom password punya tombol mata untuk melihat/menyembunyikan
   expect(src).toContain("Tampilkan password");
   expect(src).toContain("Sembunyikan password");
   expect(src).toMatch(/type=\{lihat \? "text" : "password"\}/);
+});
+
+it("kirimWa: gagal sistem memanggil laporWaGagal (502, 503); nomor tidak valid (400) tidak", async () => {
+  vi.stubGlobal("fetch", async () => new Response("err", { status: 500 }));
+  process.env.BABLAST_API_KEY = KEY;
+  const { kirimWa } = await import("@/lib/wa");
+  await expect(kirimWa("628157005842", "halo")).rejects.toMatchObject({ status: 502 });
+  expect(lapor).toHaveBeenCalledTimes(1);
+  expect(lapor.mock.calls[0][0]).toBe(502);
+  expect(JSON.stringify(lapor.mock.calls[0])).not.toContain(KEY);
+  await expect(kirimWa("123", "halo")).rejects.toMatchObject({ status: 400 });
+  expect(lapor).toHaveBeenCalledTimes(1);
+  delete process.env.BABLAST_API_KEY;
+  await expect(kirimWa("628157005842", "halo")).rejects.toMatchObject({ status: 503 });
+  expect(lapor.mock.calls[1][0]).toBe(503);
 });

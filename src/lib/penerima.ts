@@ -26,7 +26,7 @@ function muat(): Promise<U[]> {
         const first = l[0];
         return {
           email: String(r.fields[AF.email] || "").trim().toLowerCase(),
-          jabatan: jabatanOf(r.fields).split(",").map((s) => s.trim()).filter(Boolean),
+          jabatan: String(jabatanOf(r.fields)).split(",").map((s: string) => s.trim()).filter(Boolean),
           sepPeran: nameOf(r.fields[AF.sepPeran]),
           umat: typeof first === "string" ? first : first?.id || "",
         };
