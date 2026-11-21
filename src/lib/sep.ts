@@ -4,11 +4,16 @@ import * as XLSX from "xlsx";
 import { Access, BASE_BPK, HttpError, T } from "./policy";
 import { at, listPage, listUntil } from "./airtable";
 import { clearProxyCache } from "./proxy";
+import { mintaApproval } from "./minta-approval";
+import { emailsTimSep } from "./penerima";
+import { buatNotif } from "./notif";
+import { appUrl } from "./mail";
 
 const TK = { judul: "fldYqmy7odEnwqbrh", event: "fldxM5KAH4txJsC4s", paroki: "fldfHUZK6u2zkI7Yu", token: "flddxcs0pEaEZlXL1", status: "fldidtKcy6zhf1owX", oleh: "fldfMsKP2X4j6WGXM", selesaiOleh: "fld83uibtfzWzpN0G" };
 const PS = { nama: "fld4aXu6UhTUyu2a8", keg: "fldJjgxA4mESGeOYG", lahir: "fldVwYghE0cSodecK", alamat: "fldBap2tEPX9R4LtD", paroki: "fldTj9n5kTQiquymW", jk: "fldU3sCQfDmubXeBZ", email: "fld99riZwzntgnERq", wa: "fldZIpZfjPf5JDkuo", status: "fld4dVr7hIV4xqAg7", sumber: "fldnQxpE9QVt0o9JH", oleh: "fldA6WcgCfLVd9Y5O" };
 const EV = { nama: "fld0d9tIyi4nyTZsM", tgl: "fldoIkx9wLMaKOa38", kel: "fldhgv2WlvqytF6zA", lokasi: "fldY0qw1v0a4fK9Sp", jenis: "fldrYLgd8LCDjwmLZ" };
 const REC = /^rec[A-Za-z0-9]{14}$/;
+const PREF_MENUNGGU = "[Menunggu] ";
 const EMAIL = /^[^@\s,;"<>]+@[^@\s,;"<>]+\.[^@\s,;"<>]+$/;
 
 export type Peran = "tim" | "pic" | "view";
@@ -83,12 +88,42 @@ export async function sepCall(action: string, i: any, a: Access) {
       paroki = [pid];
     } else if (p === "pic") throw new HttpError(403, "KEP non paroki hanya oleh Tim SEP BPK.");
     const pref = tgl.slice(2, 4) + tgl.slice(5, 7) + tgl.slice(8, 10) + "-";
-    const ev = await at(`/v0/${BASE_BPK}/${T.events}`, { method: "POST", body: JSON.stringify({ typecast: true, records: [{ fields: { [EV.nama]: pref + nama, [EV.tgl]: tgl, [EV.kel]: jenis, [EV.jenis]: "Non Rutin", ...(lokasi ? { [EV.lokasi]: lokasi } : {}) } }] }) });
+    // Tim SEP BPK memutuskan sendiri; pengaju lain (PIC paroki) menunggu persetujuan Tim SEP dan link pendaftaran mati dulu.
+    const perlu = p !== "tim";
+    const ev = await at(`/v0/${BASE_BPK}/${T.events}`, { method: "POST", body: JSON.stringify({ typecast: true, records: [{ fields: { [EV.nama]: (perlu ? PREF_MENUNGGU : "") + pref + nama, [EV.tgl]: tgl, [EV.kel]: jenis, [EV.jenis]: "Non Rutin", ...(lokasi ? { [EV.lokasi]: lokasi } : {}) } }] }) });
     const token = crypto.randomBytes(9).toString("base64url");
-    const kg = await at(`/v0/${BASE_BPK}/${T.sepKegiatan}`, { method: "POST", body: JSON.stringify({ records: [{ fields: { [TK.judul]: nama, [TK.event]: [ev.records[0].id], ...(paroki.length ? { [TK.paroki]: paroki } : {}), [TK.token]: token, [TK.status]: "Berjalan", [TK.oleh]: a.email } }] }) });
+    const kg = await at(`/v0/${BASE_BPK}/${T.sepKegiatan}`, { method: "POST", body: JSON.stringify({ records: [{ fields: { [TK.judul]: nama, [TK.event]: [ev.records[0].id], ...(paroki.length ? { [TK.paroki]: paroki } : {}), [TK.token]: token, [TK.status]: perlu ? "Menunggu Persetujuan" : "Berjalan", [TK.oleh]: a.email } }], ...(perlu ? { typecast: true } : {}) }) });
     clearProxyCache();
-    console.log(JSON.stringify({ audit: "sep.create", who: a.email, kegiatan: kg.records[0].id }));
-    return { id: kg.records[0].id, eventId: ev.records[0].id, token };
+    console.log(JSON.stringify({ audit: "sep.create", who: a.email, kegiatan: kg.records[0].id, perluPersetujuan: perlu }));
+    if (perlu) {
+      // WA ke Tim SEP. Gagal mengirim tidak membatalkan pembuatan kegiatan.
+      try {
+        let pk = ""; if (paroki[0]) { try { pk = String((await at(`/v0/${BASE_BPK}/${T.paroki}/${paroki[0]}?returnFieldsByFieldId=true`)).fields[PAR.nama] || ""); } catch {} }
+        await mintaApproval({ jenis: "sep", penerima: await emailsTimSep(), pesan: `Kegiatan SEP baru menunggu persetujuan Tim SEP: ${nama}${pk ? ` (${pk})` : ""}, mulai ${tgl}.`, tautan: "", url: `${appUrl()}/dashboard?tab=kep` });
+      } catch (e) { console.error("mintaApproval sep", (e as Error)?.message); }
+    }
+    return { id: kg.records[0].id, eventId: ev.records[0].id, token, status: perlu ? "Menunggu Persetujuan" : "Berjalan" };
+  }
+  if (action === "setujui" || action === "tolak") {
+    if (p !== "tim") throw new HttpError(403, "Hanya Tim SEP BPK yang boleh memutuskan kegiatan baru.");
+    const k = await getKeg(String(i?.kegiatanId));
+    if (sel(k.fields[TK.status]) !== "Menunggu Persetujuan") throw new HttpError(409, "Kegiatan ini sudah diputuskan atau tidak menunggu persetujuan. Muat ulang halaman.");
+    const setuju = action === "setujui", status = setuju ? "Berjalan" : "Ditolak";
+    await at(`/v0/${BASE_BPK}/${T.sepKegiatan}`, { method: "PATCH", body: JSON.stringify({ records: [{ id: k.id, fields: { [TK.status]: status } }], typecast: true }) });
+    // Entri kalender: buang awalan [Menunggu] saat disetujui; beri awalan [Ditolak] saat ditolak. Tidak ada field baru.
+    const eid = (k.fields[TK.event] || [])[0];
+    if (eid && REC.test(eid)) {
+      try {
+        const e = await at(`/v0/${BASE_BPK}/${T.events}/${eid}?returnFieldsByFieldId=true`);
+        const asli = String(e.fields[EV.nama] || "").replace(PREF_MENUNGGU, "");
+        await at(`/v0/${BASE_BPK}/${T.events}`, { method: "PATCH", body: JSON.stringify({ records: [{ id: eid, fields: { [EV.nama]: (setuju ? "" : "[Ditolak] ") + asli } }] }) });
+      } catch (e) { console.error("sep: ubah nama event gagal", (e as Error)?.message); }
+    }
+    clearProxyCache();
+    console.log(JSON.stringify({ audit: "sep." + action, who: a.email, kegiatan: k.id }));
+    const pemohon = String(k.fields[TK.oleh] || "").trim().toLowerCase();
+    if (pemohon) await buatNotif([pemohon], `Kegiatan SEP "${String(k.fields[TK.judul] || "")}" ${setuju ? "disetujui Tim SEP BPK. Link pendaftaran sudah aktif." : "ditolak Tim SEP BPK."}`, "");
+    return { ok: true, status };
   }
   if (action === "finish") {
     if (p !== "tim") throw new HttpError(403, "Hanya Tim SEP BPK yang boleh menyelesaikan kegiatan.");
@@ -237,7 +272,8 @@ export async function kegByToken(token: string) {
   const eid = (r.fields[TK.event] || [])[0], pid = (r.fields[TK.paroki] || [])[0];
   if (eid && REC.test(eid)) { try { const e = await at(`/v0/${BASE_BPK}/${T.events}/${eid}?returnFieldsByFieldId=true`); tgl = String(e.fields[EV.tgl] || "").slice(0, 10); lokasi = String(e.fields[EV.lokasi] || ""); } catch {} }
   if (pid && REC.test(pid)) { try { const e = await at(`/v0/${BASE_BPK}/${T.paroki}/${pid}?returnFieldsByFieldId=true`); paroki = String(e.fields[PAR.nama] || ""); } catch {} }
-  return { id: r.id, judul: String(r.fields[TK.judul] || ""), selesai: r.fields[TK.status] === "Selesai", tgl, lokasi, paroki };
+  const status = sel(r.fields[TK.status]);
+  return { id: r.id, judul: String(r.fields[TK.judul] || ""), selesai: status === "Selesai", belum: status === "Menunggu Persetujuan" || status === "Ditolak", tgl, lokasi, paroki };
 }
 const hits = new Map<string, number[]>();
 export function rateOk(ip: string) {
@@ -248,6 +284,7 @@ export async function submitPublic(token: string, body: any, ip: string) {
   if (body?.website) return { ok: true }; // honeypot
   if (!rateOk(ip)) throw new HttpError(429, "Terlalu banyak percobaan. Coba lagi nanti.");
   const k = await kegByToken(token); if (!k) throw new HttpError(404, "Link pendaftaran tidak valid.");
+  if (k.belum) throw new HttpError(403, "Kegiatan ini belum disetujui Tim SEP BPK.");
   if (k.selesai) throw new HttpError(400, "Pendaftaran untuk kegiatan ini sudah ditutup.");
   const v = validatePendaftar(body); if (!v.fields) throw new HttpError(400, v.error!);
   if (!(await parokiKeuskupan()).includes(String(v.fields[PS.paroki]))) throw new HttpError(400, "Pilih paroki dari daftar.");

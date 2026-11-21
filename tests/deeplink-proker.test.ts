@@ -13,3 +13,9 @@ it("id tidak valid atau akun tanpa tab Program Kerja -> openProker kosong", () =
   expect(me(renderDashboard({ ...acc, tabs: ["Dashboard"] }, false, null, ID)).openProker).toBe("");
   expect(me(renderDashboard(acc)).openProker).toBe("");
 });
+
+it("link ?tab=kep: hanya untuk akun yang punya tab KEP", () => {
+  expect(me(renderDashboard({ ...acc, tabs: ["Dashboard", "KEP"] }, false, null, "", "kep")).openTab).toBe("kep");
+  expect(me(renderDashboard(acc, false, null, "", "kep")).openTab).toBe("");
+  expect(me(renderDashboard({ ...acc, tabs: ["KEP"] }, false, null, "", "lain")).openTab).toBe("");
+});

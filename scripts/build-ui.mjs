@@ -244,6 +244,7 @@ var EPK = {
 var APK_VERSI = "1.1"; /* samakan dengan versionName di android/app/build.gradle */
 function applyMe() {
   var me = window.__ME__; if (!me) return;
+  if (me.openTab === "kep") setTimeout(function () { var tb = document.getElementById("tabbtn-kep"); if (tb) tb.click(); }, 0);
   if (me.openProker) { window.__PROKER_OPEN = me.openProker; setTimeout(function () { var tb = document.getElementById("tabbtn-proker"); if (tb) tb.click(); if (window.prokerOpen) window.prokerOpen(me.openProker); }, 0); }
   ["beranda", "pengurus", "pewarta", "luar", "pd", "umat", "kalender", "event", "kep", "inventaris", "keuangan", "proker", "admin"].forEach(function (t) {
     var b = document.getElementById("tabbtn-" + t); if (b && me.tabs.indexOf(t) < 0) b.hidden = true;

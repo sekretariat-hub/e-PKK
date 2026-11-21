@@ -3466,7 +3466,7 @@ function sepPost(action, input) {
 function sepReload() { delete D.evx; delete D.spen; delete D.skeg; SS.evx = SS.spen = SS.skeg = null; ensureEvt(true); }
 function kpFormHtml() {
   var pk = (D.kpar || []).filter(function (p) { return /bandung/i.test(p.kus) && !/luar/i.test(p.nama); }).sort(function (a, b) { return cmpId(a.nama, b.nama); });
-  return '<button type="button" class="btn" data-kpv="home">← Kembali</button><h2>KEP baru</h2><p class="hint">Isi detail kegiatan. Setelah disimpan, sistem membuat link form pendaftaran untuk peserta.</p>' +
+  return '<button type="button" class="btn" data-kpv="home">← Kembali</button><h2>KEP baru</h2><p class="hint">Isi detail kegiatan. Setelah disimpan, sistem membuat link form pendaftaran untuk peserta. Kegiatan dari PIC paroki perlu persetujuan Tim SEP BPK dulu.</p>' +
     '<div class="pan"><div class="epk-row"><label>Nama kegiatan <input id="nbNama" type="text" placeholder="mis. KEP Paroki ... Angkatan 10" maxlength="120"></label></div>' +
     '<div class="epk-row"><label>Jenis <select id="nbJenis"><option value="KEP">KEP paroki</option>' + (sepRole() === "tim" ? '<option value="KEP Exe">KEP non paroki (Exe)</option>' : "") + '</select></label>' +
     '<label>Paroki penyelenggara <select id="nbPk"><option value="">Pilih…</option>' + pk.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.nama) + "</option>"; }).join("") + "</select></label></div>" +
@@ -3504,10 +3504,14 @@ function kpLoadRw(ids) {
 function kpAdminBox(x) {
   var k = x.keg; if (!k) return '<p class="note">Kegiatan lama (belum memakai form pendaftaran @SEP).</p>';
   var w = sepRole(), h = '<div class="pan"><h4>Status kegiatan</h4><p><span class="tag' + (k.status === "Selesai" ? " alt" : "") + '">' + esc(k.status || "Berjalan") + "</span></p>";
-  if (k.status === "Selesai") h += '<p class="note">Kegiatan sudah selesai dan statusnya tidak bisa diubah lagi.</p>';
+  if (k.status === "Menunggu Persetujuan") {
+    if (w === "tim") h += '<p class="note">Kegiatan baru ini menunggu persetujuan Anda. Link pendaftaran peserta mati sampai disetujui.</p><div class="epk-row"><button type="button" class="chip" data-kpset="' + esc(k.id) + '">Setujui kegiatan</button><button type="button" class="chip" data-kptol="' + esc(k.id) + '">Tolak</button></div><div id="kdMsg" class="note"></div>';
+    else h += '<p class="note">Menunggu persetujuan Tim SEP BPK. Link pendaftaran peserta aktif setelah disetujui.</p>';
+  } else if (k.status === "Ditolak") h += '<p class="note">Kegiatan ini ditolak Tim SEP BPK. Hubungi Tim SEP BPK bila perlu diajukan ulang.</p>';
+  else if (k.status === "Selesai") h += '<p class="note">Kegiatan sudah selesai dan statusnya tidak bisa diubah lagi.</p>';
   else if (w === "tim") h += '<button type="button" class="chip" data-kpfin="' + esc(k.id) + '">Tandai selesai (tidak bisa dibatalkan)</button>';
   h += "</div>";
-  if (k.status !== "Selesai" && (w === "tim" || w === "pic")) h += kpLinkCard(k.token, x.nama) + '<div class="pan"><h4>Unggah Excel peserta</h4><p class="note">Panitia mengisi template lalu mengunggahnya. Peserta masuk antrean persetujuan.</p><div class="epk-row"><input type="file" id="upFile" accept=".xlsx"><button type="button" class="chip" data-kpup="' + esc(k.id) + '">Unggah</button></div><div id="upMsg" class="note"></div></div>';
+  if ((!k.status || k.status === "Berjalan") && (w === "tim" || w === "pic")) h += kpLinkCard(k.token, x.nama) + '<div class="pan"><h4>Unggah Excel peserta</h4><p class="note">Panitia mengisi template lalu mengunggahnya. Peserta masuk antrean persetujuan.</p><div class="epk-row"><input type="file" id="upFile" accept=".xlsx"><button type="button" class="chip" data-kpup="' + esc(k.id) + '">Unggah</button></div><div id="upMsg" class="note"></div></div>';
   return h;
 }
 
@@ -3610,7 +3614,7 @@ function kpTabelKeg(f) {
       return '<tr class="clk" data-kpe="' + esc(x.id) + '" tabindex="0"><td>' + esc(x.nama) + "</td><td>" + esc(fmtDate(x.tgl, { day: "numeric", month: "short", year: "numeric" })) + "</td><td>" + esc(x.pk) + '</td><td><span class="tag' + (x.done ? " alt" : "") + '">' + kpStat(x) + '</span></td><td class="num">' + x.ps.length + "</td></tr>";
     }).join("") + "</tbody></table></div>";
 }
-function kpStat(x) { return x.batal ? "Dibatalkan" : x.keg ? (x.keg.status === "Selesai" ? "Selesai" : "Berjalan") : x.done ? "Sudah berjalan" : "Terjadwal"; }
+function kpStat(x) { return x.batal ? "Dibatalkan" : x.keg ? (x.keg.status === "Selesai" ? "Selesai" : x.keg.status === "Menunggu Persetujuan" || x.keg.status === "Ditolak" ? x.keg.status : "Berjalan") : x.done ? "Sudah berjalan" : "Terjadwal"; }
 function kpEvCard(x) {
   var st = kpStat(x);
   return '<button type="button" class="evc" data-kpe="' + esc(x.id) + '"><b>' + esc(x.nama) + "</b><span>" + esc(fmtDate(x.tgl, { day: "numeric", month: "short", year: "numeric" })) + " · " + esc(x.pk) + '</span><span class="tag' + (x.done ? " alt" : "") + '">' + st + "</span><em>" + x.ps.length + " peserta</em></button>";
@@ -3636,7 +3640,7 @@ function renderKep() {
   srcStatus("kepLink", ["evx", "pend", "kpar", "kpen", "skeg", "spen"]);
   if (!D.evx || !D.pend) { el.innerHTML = '<p class="hint">Memuat data KEP…</p>'; return; }
   var all = kpEvs(), f = kpFilter(all), back = '<button type="button" class="btn" data-kpv="home">← Kembali</button>', h = "";
-  if (KP.v === "baru") { el.innerHTML = kpFormHtml() + (KP.made ? kpLinkCard(KP.made.token, KP.made.judul) : ""); return; }
+  if (KP.v === "baru") { el.innerHTML = kpFormHtml() + (KP.made ? (KP.made.menunggu ? '<div class="pan"><h4>Menunggu persetujuan Tim SEP BPK</h4><p class="note">Kegiatan sudah diajukan dan Tim SEP BPK sudah diberi tahu lewat WhatsApp. Link pendaftaran peserta aktif setelah disetujui.</p></div>' : kpLinkCard(KP.made.token, KP.made.judul)) : ""); return; }
   if (KP.v === "appr") { el.innerHTML = kpApprHtml(all); return; }
   if (KP.v === "evd") {
     var x = all.filter(function (a) { return a.id === KP.sel; })[0];
@@ -3693,7 +3697,7 @@ document.getElementById("tab-kep").addEventListener("click", function (e) {
   var t = e.target, id = t.id, say = function (el, m, bad) { var n = document.getElementById(el); if (n) { n.textContent = m; n.style.color = bad ? "#b3261e" : ""; } };
   if (id === "nbSimpan") {
     var v = function (i) { return document.getElementById(i).value; }; t.disabled = true; say("nbMsg", "Menyimpan…");
-    sepPost("create", { nama: v("nbNama"), jenis: v("nbJenis"), parokiId: v("nbPk"), tgl: v("nbTgl"), lokasi: v("nbLok") }).then(function (j) { KP.made = { token: j.token, judul: v("nbNama") }; sepReload(); renderKep(); }, function (er) { t.disabled = false; say("nbMsg", er.message, true); });
+    sepPost("create", { nama: v("nbNama"), jenis: v("nbJenis"), parokiId: v("nbPk"), tgl: v("nbTgl"), lokasi: v("nbLok") }).then(function (j) { KP.made = { token: j.token, judul: v("nbNama"), menunggu: j.status === "Menunggu Persetujuan" }; sepReload(); renderKep(); }, function (er) { t.disabled = false; say("nbMsg", er.message, true); });
   } else if (id === "apAll") { Array.prototype.forEach.call(document.querySelectorAll(".apCk"), function (c) { c.checked = t.checked; }); }
   else if (id === "apOk" || id === "apNo") {
     var ids = Array.prototype.map.call(document.querySelectorAll(".apCk:checked"), function (c) { return c.value; }); if (!ids.length) { say("apMsg", "Centang peserta dulu.", true); return; }
@@ -3701,7 +3705,12 @@ document.getElementById("tab-kep").addEventListener("click", function (e) {
     t.disabled = true; say("apMsg", "Menyimpan…");
     sepPost("decide", { ids: ids, decision: id === "apOk" ? "Disetujui" : "Ditolak" }).then(function () { sepReload(); }, function (er) { t.disabled = false; say("apMsg", er.message, true); });
   } else if (t.dataset && t.dataset.kpcopy) { try { navigator.clipboard.writeText(t.dataset.kpcopy); t.textContent = "Tersalin ✓"; } catch (x) { prompt("Salin link:", t.dataset.kpcopy); } }
-  else if (t.dataset && t.dataset.kpfin) {
+  else if (t.dataset && (t.dataset.kpset || t.dataset.kptol)) {
+    var setuju = !!t.dataset.kpset;
+    if (!confirm(setuju ? "Setujui kegiatan ini? Link pendaftaran peserta akan aktif." : "Tolak kegiatan ini?")) return;
+    t.disabled = true; say("kdMsg", "Menyimpan…");
+    sepPost(setuju ? "setujui" : "tolak", { kegiatanId: t.dataset.kpset || t.dataset.kptol }).then(function () { sepReload(); }, function (er) { t.disabled = false; say("kdMsg", er.message, true); });
+  } else if (t.dataset && t.dataset.kpfin) {
     if (!confirm("Tandai kegiatan ini SELESAI? Status tidak bisa diubah lagi dan pendaftaran ditutup.")) return;
     sepPost("finish", { id: t.dataset.kpfin }).then(function () { sepReload(); }, function (er) { alert(er.message); });
   } else if (t.dataset && t.dataset.kpup) {
