@@ -104,6 +104,13 @@ describe("dialog Edit umat", () => {
     expect(q(w, FLD.pd).value).toBe("");
     expect(q(w, FLD.paroki).value).toBe("");
   });
+  it("urutan pilihan ganda di data tidak dianggap perubahan", async () => {
+    const { w, calls } = await boot({ ...FULL, [FLD.libat]: [{ name: "Pewarta BPK" }, { name: "Pengurus BPK" }] });
+    await open(w);
+    w.document.querySelector('[data-act="simpan"]').click(); await tick();
+    expect(updates(calls).length).toBe(0);
+    expect(w.document.querySelector('[role="alert"]').textContent).toMatch(/Tidak ada perubahan/);
+  });
   it("sukses memperbarui D.ua, memanggil renderUmat, dan menutup dialog", async () => {
     const { w } = await boot();
     await open(w);

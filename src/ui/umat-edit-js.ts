@@ -20,14 +20,17 @@ export const UMAT_EDIT_JS = String.raw`
   function arr(v) { return Array.isArray(v) ? v : []; }
   function kosong(v) { return v == null || (typeof v === "string" && !v.trim()); }
 
-  function initial(v) {
+  function initial(v, m) {
     var o = {};
     ["baptis", "nama", "pang", "wa", "lain", "email", "alamat"].forEach(function (k) { o[F[k]] = v[F[k]] == null ? "" : String(v[F[k]]); });
     o[F.tgl] = String(v[F.tgl] || "").slice(0, 10);
     o[F.jk] = String(nm(v[F.jk]) || "");
     o[F.kual] = String(nm(v[F.kual]) || "");
     [F.pd, F.paroki].forEach(function (id) { var a = arr(v[id]); o[id] = a.length ? String(a[0] && a[0].id ? a[0].id : a[0]) : ""; });
-    [F.libat, F.alumni].forEach(function (id) { o[id] = arr(v[id]).map(function (x) { return String(nm(x)); }); });
+    [[F.libat, m.libat], [F.alumni, m.alumni]].forEach(function (p) {
+      var names = arr(v[p[0]]).map(function (x) { return String(nm(x)); }), pos = function (n) { var i = p[1].indexOf(n); return i < 0 ? 999 : i; };
+      o[p[0]] = names.sort(function (a, b) { return pos(a) - pos(b); }); /* urutan sama dengan daftar pilihan, supaya tidak dianggap berubah */
+    });
     o[F.hapus] = v[F.hapus] === true;
     return o;
   }
@@ -124,7 +127,7 @@ export const UMAT_EDIT_JS = String.raw`
     Promise.all([getMeta(), api("list_records_for_table", { baseId: BASE, tableId: TBL, recordIds: [id], fieldIds: IDS, pageSize: 1 })]).then(function (r) {
       var m = r[0], rec = (r[1].records || [])[0];
       if (!rec) throw new Error("Data umat tidak ditemukan.");
-      var orig = initial(rec.cellValuesByFieldId || rec.fields || {}), box;
+      var orig = initial(rec.cellValuesByFieldId || rec.fields || {}, m), box;
       var form = buildForm(m, orig, function (cur, msg, btn) {
         if (busy) return;
         var p = problem(cur); if (p) { msg.textContent = p; return; }
