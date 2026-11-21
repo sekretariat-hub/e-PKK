@@ -3296,25 +3296,16 @@ document.getElementById("uaBody").addEventListener("click", function (e) {
 /* ---------- event ---------- */
 var T_PEND = "tbltiJ1qDJEwfWPLg";
 var PF = { ev: "flduf15moMpZSklGL", nama: "fld9ucFxEU0cUSHWw", pd: "fldMBf67dQxv51kY1", dek: "fldAZzqERt3oFHRRx", jk: "fldylW3JpqB1DJ0Fh", usia: "fldArgqtlZOnnRIvX", nikah: "fldmecbafGeLtqCSd", kat: "fldIgnkqdrDPz8gCV", st: "fldNGGEcwHqIsQPct", val: "fldqB6h9rzzC5VhKI", inap: "fldCqIqQmVnFXqrOU", hadir: "fldcpfpO2QvPGmgd7" };
-var EVX = { nama: "fld0d9tIyi4nyTZsM", tgl: "fldoIkx9wLMaKOa38", st: "fldHs8NnkUlEXDqLy", reg: "fldUqEnDI4GCqdwAk", jenis: "fldrYLgd8LCDjwmLZ", kel: "fldhgv2WlvqytF6zA", lokasi: "fldY0qw1v0a4fK9Sp", link: "fldyZyxxhZXUjhrqa", msg: "fldbLYDWk87mIC9yV", pic: "fldROaJ8rPAZQPTED", telp: "fld4qestIo5EjWAvk", harga: "fldSALEmLll1QZZlZ", hargaOmk: "fldcvxEWLIGUoMdoJ" };
+var EVX = { nama: "fld0d9tIyi4nyTZsM", tgl: "fldoIkx9wLMaKOa38", st: "fldHs8NnkUlEXDqLy", reg: "fldUqEnDI4GCqdwAk", jenis: "fldrYLgd8LCDjwmLZ", kel: "fldhgv2WlvqytF6zA", lokasi: "fldY0qw1v0a4fK9Sp", link: "fldyZyxxhZXUjhrqa", msg: "fldbLYDWk87mIC9yV", pic: "fldROaJ8rPAZQPTED", telp: "fld4qestIo5EjWAvk" };
 var EV = { tab: "daftar", bk: "semua", hk: "semua", limit: 10, sel: "", waktu: "next", q: "", pdf: "", rq: "", open: false, dim: -1, dv: "", want: "", msg: "" };
 SRC_LABEL.evx = "Event"; SRC_LABEL.pend = "Pendaftaran event";
 function loadEvx() {
   return fetchAll(BASE, T_EVENTS, Object.keys(EVX).map(function (k) { return EVX[k]; })).then(function (recs) {
     D.evx = recs.map(function (r) {
       var v = r.cellValuesByFieldId || {};
-      return { id: r.id, nama: one(v[EVX.nama]), tgl: one(v[EVX.tgl]).slice(0, 10), st: one(v[EVX.st]), reg: one(v[EVX.reg]), jenis: one(v[EVX.jenis]), kel: one(v[EVX.kel]), lokasi: one(v[EVX.lokasi]), link: (v[EVX.link] && /^https:\/\//.test(v[EVX.link].url || "")) ? v[EVX.link].url : "", msg: (typeof v[EVX.msg] === "string" ? v[EVX.msg].trim() : ""), pic: one(v[EVX.pic]), telp: one(v[EVX.telp]), harga: rpNum(v[EVX.harga]), hargaOmk: rpNum(v[EVX.hargaOmk]) };
+      return { id: r.id, nama: one(v[EVX.nama]), tgl: one(v[EVX.tgl]).slice(0, 10), st: one(v[EVX.st]), reg: one(v[EVX.reg]), jenis: one(v[EVX.jenis]), kel: one(v[EVX.kel]), lokasi: one(v[EVX.lokasi]), link: (v[EVX.link] && /^https:\/\//.test(v[EVX.link].url || "")) ? v[EVX.link].url : "", msg: (typeof v[EVX.msg] === "string" ? v[EVX.msg].trim() : ""), pic: one(v[EVX.pic]), telp: one(v[EVX.telp]) };
     }).filter(function (e) { return e.nama && e.tgl; });
   });
-}
-/* harga event (teks di Airtable, mis. "30000") menjadi angka; kosong = 0 */
-function rpNum(v) { var n = parseInt(String(v == null ? "" : v).replace(/[^0-9]/g, ""), 10); return isNaN(n) ? 0 : n; }
-function rpFmt(n) { return "Rp" + Math.round(n).toLocaleString("id-ID"); }
-/* nilai rupiah event = pendaftar yang sudah divalidasi bendahara x harga event (harga OMK dipakai bila kategori OMK dan harganya diisi) */
-function eventRp(e, regs) {
-  var tot = 0;
-  regs.forEach(function (p) { if (!p.val) return; tot += (/omk/i.test(p.kat || "") && e.hargaOmk) ? e.hargaOmk : (e.harga || 0); });
-  return tot;
 }
 function loadPend() {
   return fetchAll(BASE, T_PEND, Object.keys(PF).map(function (k) { return PF[k]; })).then(function (recs) {
@@ -3787,7 +3778,7 @@ function renderEvDetail(e, regs) {
   h += '<div class="evact">' + (e.tgl === TODAY ? '<span class="tag live" data-live-b="' + esc(e.id) + '">● Live</span>' : "") +
     '<button type="button" class="chip" data-absen="' + esc(e.id) + '"' + (va ? " disabled" : "") + '>Link absensi</button></div></div>' +
     '<p class="note" id="absenMsg">' + (va ? "Tidak tersedia di mode Lihat sebagai. Kembali ke akun Anda untuk membuat link." : "") + "</p>";
-  h += '<div class="tiles sm">' + tile(regs.length, "Pendaftar", batal ? batal + " batal tidak dihitung" : "aktif") + tile(done.length + "/" + pdActive.length, "PD mendaftar", miss.length + " PD belum") + tile(e.harga || e.hargaOmk ? rpFmt(eventRp(e, regs)) : "–", "Confirmed / Paid", e.harga || e.hargaOmk ? vald + " divalidasi" + (e.harga ? " × " + rpFmt(e.harga) : "") + " dari " + regs.length + " pendaftar" : "harga event belum diisi · divalidasi: " + vald) + "</div>";
+  h += '<div class="tiles sm">' + tile(regs.length, "Pendaftar", batal ? batal + " batal tidak dihitung" : "aktif") + tile(done.length + "/" + pdActive.length, "PD mendaftar", miss.length + " PD belum") + tile(evRpText(EVRP[e.id] && EVRP[e.id].v), "Confirmed / Paid", evRpSub(EVRP[e.id] && EVRP[e.id].v, vald)).replace('<div class="tile">', '<div class="tile" data-evrp="' + esc(e.id) + '">') + "</div>";
   var tabs = [["daftar", "Pendaftar", regs.length], ["demo", "Demografi"], ["pd", "Per PD", done.length], ["belum", "Belum mendaftar", miss.length], ["seksi", "Per seksi"]];
   h += '<div class="evtabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-evtab="' + t[0] + '"' + (t[0] === "seksi" ? ' title="Laporan perwakilan per seksi"' : "") + ' aria-selected="' + (tab === t[0]) + '">' + t[1] + (t[2] !== undefined ? " <em>" + t[2] + "</em>" : "") + "</button>"; }).join("") + "</div>";
   var pane = function (k, inner) { return '<div class="evpane" data-evpane="' + k + '"' + (tab === k ? "" : " hidden") + ">" + inner + "</div>"; };
@@ -3826,6 +3817,7 @@ function renderEvDetail(e, regs) {
   el.innerHTML = h;
   el._regs = regs;
   el._eid = e.id;
+  loadEvRp(e.id, vald);
   if (tab === "seksi") { if (SK.eid === e.id && SK.data) skDraw(e.id); else skLoad(e.id, e.tgl < TODAY ? "hadir" : "daftar"); }
   renderEvRegs();
 }
@@ -3838,6 +3830,25 @@ function hadirGrup(p) {
 }
 /* "Hadir" mencakup Go show; "Go show" hanya yang daftar di hari acara */
 function hadirCocok(p, k) { var g = hadirGrup(p); return k === "hadir" ? g === "hadir" || g === "goshow" : g === k; }
+/* tile Confirmed / Paid: nilai rupiah uang masuk pendaftar dari Mutasi (base Bendahara); server hanya mengizinkan yang berhak Keuangan */
+var EVRP = {};
+function rpFmt(n) { return "Rp" + Math.round(n).toLocaleString("id-ID"); }
+function evRpText(c) { return c === undefined ? "…" : c === null ? "–" : rpFmt(c.total); }
+function evRpSub(c, vald) { return c === undefined ? "memuat uang masuk · divalidasi: " + vald : c === null ? "nominal hanya untuk Bendahara dan pimpinan · divalidasi: " + vald : (c.tercatat ? "uang masuk · " + c.jumlah + " transaksi" : "belum ada uang masuk tercatat") + " · divalidasi: " + vald; }
+function paintEvRp(id, vald) {
+  var t = document.querySelector('[data-evrp="' + id + '"]'); if (!t) return;
+  var c = EVRP[id] && EVRP[id].v; t.querySelector("b").textContent = evRpText(c); t.querySelector("small").textContent = evRpSub(c, vald);
+}
+function loadEvRp(id, vald) {
+  var c = EVRP[id];
+  if (c && (c.busy || Date.now() - c.at < 60000)) { paintEvRp(id, vald); return; }
+  EVRP[id] = { at: Date.now(), busy: true, v: c ? c.v : undefined };
+  fetch("/api/event-uangmasuk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ event: id }) })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .catch(function () { return null; })
+    .then(function (j) { EVRP[id] = { at: Date.now(), busy: false, v: j && typeof j.total === "number" ? j : null }; paintEvRp(id, vald); });
+  paintEvRp(id, vald);
+}
 function setEvBk(k) {
   var el = document.getElementById("evDetail"); if (!el) return;
   EV.bk = k;
