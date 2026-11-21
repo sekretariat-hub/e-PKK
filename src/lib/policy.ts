@@ -58,6 +58,8 @@ type Spec = {
   readFields?: string[]; // bila ada: hanya field ini yang boleh diminta
   update?: { tabs: string[]; fields: string[]; record?: "event-owner" };
   create?: { tabs: string[]; fields: string[] };
+  /** Field tambahan yang hanya boleh diubah level Superadmin (tab yang sama wajib dimiliki). */
+  superUpdate?: { tabs: string[]; fields: string[] };
 };
 
 /** Event BPK: email pembuat (diisi server saat event dibuat dari aplikasi; tidak boleh diubah dari browser). */
@@ -83,6 +85,9 @@ export const KEU_READ = Object.values(KEU);
 /** Tabel Rekening: nomor rekening tidak pernah dikirim ke browser; hanya nama dan bank. */
 export const REK = { nomor: "fldoEgwBTWwY3n4us", nama: "fldXVyONQ0XV0h0WO", bank: "flddoVHr85euaEuj5" };
 
+/** Edit data umat oleh Superadmin (mengikuti form Fillout "Edit Database TeamUmat"; tanpa Foto). "Hapus?" hanya menandai data dobel. */
+export const UMAT_SUPER = ["fld0P7TE88KvYXORT", "fldIpQTSkFB9sU0lo", "fld469PYR80nAUNIF", "fldzY1Z2QvIIEkYXR", "fldsVrUbWf6iT5Jja", "fldAaQ3zmiLBhp4z9", "fldXGHvqnezzKZSCp", "fldxpeouH1hcxMzNc", "fldcQFzBtr9EELTtV", "fldrHJ6q3HZvApccl", "fldE62NyXuSJLvM8h", "fldQQpyVKX2eZGokY", "fldwywmGiZMscPgKq", "fld8wFTduClZ9Y5Al", "fldxZvnqVvAH4aWyd"];
+
 const PERSON = ["fldIpQTSkFB9sU0lo", "fld469PYR80nAUNIF", "fldzY1Z2QvIIEkYXR", "fldAaQ3zmiLBhp4z9", "fldcQFzBtr9EELTtV"];
 
 export const TABLES: Record<string, Spec> = {
@@ -93,6 +98,7 @@ export const TABLES: Record<string, Spec> = {
     read: ["Pengurus", "Pewarta", "PD", "Umat", "Dashboard"],
     update: { tabs: ["Pengurus", "Pewarta"], fields: PERSON },
     create: { tabs: ["PD"], fields: [PERSON[0], PERSON[2], "fldrHJ6q3HZvApccl"] },
+    superUpdate: { tabs: ["Umat"], fields: UMAT_SUPER },
   },
   [T.events]: { base: BASE_BPK, read: ["Kalender", "Dashboard", "Event", "KEP"], update: { tabs: ["Kalender", "Event"], fields: EF, record: "event-owner" }, create: { tabs: ["Kalender"], fields: EF } },
   [T.pd]: { base: BASE_BPK, read: ALL_TABS, update: { tabs: ["PD"], fields: ["fldagyoKQyhfenB7u"] } },
@@ -137,10 +143,12 @@ export function checkWrite(spec: Spec, kind: "update" | "create", records: any[]
   // Event: hak edit per record (Admin, Kesekretariatan, pembuat) diperiksa di proxy, bukan lewat level.
   const perRecord = kind === "update" && (rule as any).record === "event-owner";
   if (!perRecord && !canEdit(acc)) throw new HttpError(403, "Level Anda View saja, tidak boleh mengubah data.");
-  if (!any(acc, rule.tabs)) throw new HttpError(403, "Anda tidak punya izin mengubah data ini.");
+  const sup = kind === "update" && acc.level === "Superadmin" && !!spec.superUpdate && any(acc, spec.superUpdate.tabs);
+  if (!sup && !any(acc, rule.tabs)) throw new HttpError(403, "Anda tidak punya izin mengubah data ini.");
+  const allowed = sup ? [...rule.fields, ...spec.superUpdate!.fields] : rule.fields;
   for (const r of records) {
     for (const k of Object.keys(r.fields || {})) {
-      if (!rule.fields.includes(k)) throw new HttpError(403, "Field " + k + " tidak boleh diubah dari dashboard.");
+      if (!allowed.includes(k)) throw new HttpError(403, "Field " + k + " tidak boleh diubah dari dashboard.");
       if (k === PWB_YT) {
         const v = r.fields[k];
         if (v !== null && v !== "" && !(typeof v === "string" && /^https?:\/\/\S{3,500}$/i.test(v))) throw new HttpError(400, "Link YouTube harus berupa URL http(s).");
