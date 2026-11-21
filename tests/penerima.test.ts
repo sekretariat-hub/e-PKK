@@ -27,9 +27,9 @@ beforeEach(() => {
   });
 });
 
-it("emailsByJabatan: hanya akun Disetujui dengan jabatan cocok, huruf kecil, unik", async () => {
+it("emailsByJabatan: hanya akun Disetujui dengan jabatan cocok, huruf kecil, unik (user baru: hanya Ketua Sekretariat)", async () => {
   const { emailsByJabatan, RE_APPROVER_USER } = await import("../src/lib/penerima");
-  expect((await emailsByJabatan(RE_APPROVER_USER)).sort()).toEqual(["ketsek@x.com", "sek@x.com"]);
+  expect(await emailsByJabatan(RE_APPROVER_USER)).toEqual(["ketsek@x.com"]);
 });
 it("RE_ALERT: Sekretaris, Sekretaris Jenderal, Koordinator BPK; bukan Bendahara", async () => {
   const { emailsByJabatan, RE_ALERT } = await import("../src/lib/penerima");

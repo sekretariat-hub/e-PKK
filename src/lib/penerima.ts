@@ -3,8 +3,8 @@ import { BASE_BPK, T } from "./policy";
 import { getRecord, listUntil } from "./airtable";
 import { AF, jabatanOf } from "./access";
 
-/** Penerima WA untuk user baru: Sekretariat dan Sekretaris (bukan Sekretaris Jenderal). */
-export const RE_APPROVER_USER = /^(sekretariat|ketua sekretariat|sekretaris)$/i;
+/** Penerima WA untuk user baru: hanya Ketua Sekretariat (permintaan pemilik, 2026-11-21). Mengikuti jabatan, bukan alamat email. */
+export const RE_APPROVER_USER = /^ketua sekretariat$/i;
 /** Penerima email peringatan WA gagal: Sekretaris, Sekretaris Jenderal, Koordinator BPK. */
 export const RE_ALERT = /^(sekretaris|sekretaris jend[ae]ral|koordinator bpkpkk bandung)$/i;
 

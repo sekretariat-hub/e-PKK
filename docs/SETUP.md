@@ -18,7 +18,7 @@
 ## WA untuk permintaan persetujuan
 Setiap permintaan persetujuan (user baru, program kerja, kegiatan SEP baru, permohonan pewarta luar kota) dikirim ke WA pribadi pemutusnya berisi link tindakan, selain muncul di lonceng.
 - Wajib terisi di Vercel (Production dan Preview): `BABLAST_API_KEY` (opsional `BABLAST_SENDER_CODE`, `BABLAST_API_URL`), `SMTP_USER`, `SMTP_PASS`, `APP_URL` (agar link di WA memakai alamat yang benar).
-- Penerima: user baru = Sekretariat dan Sekretaris; program kerja = Sekjen/Koordinator BPK; SEP baru = Tim SEP BPK (kegiatan dari PIC paroki berstatus "Menunggu Persetujuan" dan link pendaftaran mati sampai disetujui); pewarta luar kota = Sekretaris Jenderal. Nomor WA diambil dari data umat yang ditautkan ke akun.
+- Penerima: user baru = Ketua Sekretariat saja; program kerja = Sekjen/Koordinator BPK; SEP baru = Tim SEP BPK (kegiatan dari PIC paroki berstatus "Menunggu Persetujuan" dan link pendaftaran mati sampai disetujui); pewarta luar kota = Sekretaris Jenderal. Nomor WA diambil dari data umat yang ditautkan ke akun.
 - Bila WA gagal karena sistem (kunci belum diisi atau BaBlast mati), email peringatan dikirim ke Sekretaris, Koordinator BPK, dan Sekretaris Jenderal, paling banyak satu kali per jam per jenis gagal.
 - **Webhook pewarta luar kota** (`POST /api/hook/luar-kota`): isi `HOOK_SECRET` (teks acak panjang) di Vercel. Panggil dengan header `x-webhook-secret: <HOOK_SECRET>` dan body `{"eventId":"rec..."}`. Dipanggil dari automation Airtable "e-PKK: email Sekjen saat ada permohonan pewarta luar kota baru" (di base SMP). Panggilan berulang untuk id yang sama hanya mengirim satu WA.
 - Opsi baru "Menunggu Persetujuan" dan "Ditolak" pada field Status SEP (tabel SEP Kegiatan) dibuat otomatis saat pertama dipakai.
