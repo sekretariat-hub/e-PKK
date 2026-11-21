@@ -7,7 +7,7 @@ const ALL = ["fld0P7TE88KvYXORT", "fldIpQTSkFB9sU0lo", "fld469PYR80nAUNIF", "fld
 
 describe("edit umat Superadmin", () => {
   it("Superadmin + tab Umat boleh mengubah semua 15 field", () => {
-    const fields = Object.fromEntries(ALL.map((f) => [f, "x"]));
+    const fields = Object.fromEntries(ALL.map((f) => [f, "x"])); fields.fldAaQ3zmiLBhp4z9 = "a@b.co"; fields.fldXGHvqnezzKZSCp = "1971-07-10";
     expect(() => checkWrite(umat, "update", [{ id: "rec1", fields }], { ...base, level: "Superadmin" })).not.toThrow();
   });
   it("Superadmin menolak field di luar daftar (Foto, formula)", () => {
@@ -20,5 +20,22 @@ describe("edit umat Superadmin", () => {
   });
   it("Superadmin tanpa tab Umat ditolak", () => {
     expect(() => checkWrite(umat, "update", [{ id: "rec1", fields: { fld0P7TE88KvYXORT: "Yosef" } }], { ...base, level: "Superadmin", tabs: ["Dashboard"] })).toThrow(HttpError);
+  });
+});
+
+describe("nilai field umat (server)", () => {
+  const sa = { ...base, level: "Superadmin" };
+  const w = (fields: any) => () => checkWrite(umat, "update", [{ id: "rec1", fields }], sa);
+  it("Nama atau No WA tidak boleh dikosongkan", () => {
+    expect(w({ fldIpQTSkFB9sU0lo: "  " })).toThrow(HttpError);
+    expect(w({ fldzY1Z2QvIIEkYXR: null })).toThrow(HttpError);
+    expect(w({ fldxpeouH1hcxMzNc: null })).toThrow(HttpError);
+  });
+  it("Email tidak valid dan tanggal salah format ditolak", () => {
+    expect(w({ fldAaQ3zmiLBhp4z9: "abc" })).toThrow(HttpError);
+    expect(w({ fldXGHvqnezzKZSCp: "10/07/1971" })).toThrow(HttpError);
+  });
+  it("mengosongkan Email, Tanggal, Kualifikasi, Paroki, PD diizinkan", () => {
+    expect(w({ fldAaQ3zmiLBhp4z9: null, fldXGHvqnezzKZSCp: null, fldwywmGiZMscPgKq: null, fldE62NyXuSJLvM8h: [], fldrHJ6q3HZvApccl: [] })).not.toThrow();
   });
 });

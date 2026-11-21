@@ -116,6 +116,15 @@ export const TABLES: Record<string, Spec> = {
   [T.pewartaBpk]: { base: BASE_SMP, read: ["Pewarta", "Pewarta luar kota", "Dashboard"], update: { tabs: ["Pewarta"], fields: PWB_EDIT } },
 };
 
+const UMAT_WAJIB = ["fldIpQTSkFB9sU0lo", "fldzY1Z2QvIIEkYXR", "fldxpeouH1hcxMzNc"];
+const kosong = (v: any) => v == null || (typeof v === "string" && !v.trim()) || (Array.isArray(v) && !v.length);
+/** Nilai field umat yang ditulis Superadmin: wajib tidak boleh dikosongkan, email dan tanggal harus berformat benar. */
+function checkUmatValue(k: string, v: any) {
+  if (UMAT_WAJIB.includes(k) && kosong(v)) throw new HttpError(400, "Nama Lengkap, No WhatsApp Aktif, dan Jenis Kelamin wajib diisi.");
+  if (k === "fldAaQ3zmiLBhp4z9" && !kosong(v) && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v).trim())) throw new HttpError(400, "Email tidak valid.");
+  if (k === "fldXGHvqnezzKZSCp" && !kosong(v) && !/^\d{4}-\d{2}-\d{2}$/.test(String(v))) throw new HttpError(400, "Tanggal Lahir harus berformat tahun-bulan-tanggal.");
+}
+
 export class HttpError extends Error {
   constructor(public status: number, message: string, public code = "tool_error") { super(message); }
 }
@@ -149,6 +158,7 @@ export function checkWrite(spec: Spec, kind: "update" | "create", records: any[]
   for (const r of records) {
     for (const k of Object.keys(r.fields || {})) {
       if (!allowed.includes(k)) throw new HttpError(403, "Field " + k + " tidak boleh diubah dari dashboard.");
+      if (sup) checkUmatValue(k, r.fields[k]);
       if (k === PWB_YT) {
         const v = r.fields[k];
         if (v !== null && v !== "" && !(typeof v === "string" && /^https?:\/\/\S{3,500}$/i.test(v))) throw new HttpError(400, "Link YouTube harus berupa URL http(s).");
