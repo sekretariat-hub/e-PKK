@@ -32,5 +32,6 @@ describe("tab Pendaftar: filter kehadiran", () => {
     expect(HTML).toContain('id="evHkChips"');
     expect(HTML).toContain("data-hk");
     expect(HTML).toContain("hadirCocok(p, hk)");
+    expect(HTML).toContain("(termasuk Hadir)");
   });
 });
