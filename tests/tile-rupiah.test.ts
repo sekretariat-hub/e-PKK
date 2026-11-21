@@ -13,12 +13,12 @@ describe("tile Confirmed / Paid memakai nilai rupiah", () => {
     expect(rpNum("")).toBe(0);
     expect(rpNum(undefined)).toBe(0);
   });
-  it("122 pendaftar x Rp30.000 = Rp3.660.000", () => {
-    const regs = Array.from({ length: 122 }, () => ({ kat: "" }));
-    expect(eventRp({ harga: 30000, hargaOmk: 0 }, regs)).toBe(3660000);
+  it("hanya pendaftar yang divalidasi bendahara dihitung: 117 x Rp30.000 = Rp3.510.000", () => {
+    const regs = Array.from({ length: 122 }, (_, i) => ({ kat: "", val: i < 117 }));
+    expect(eventRp({ harga: 30000, hargaOmk: 0 }, regs)).toBe(3510000);
   });
   it("harga OMK dipakai untuk kategori OMK bila diisi", () => {
-    const regs = [{ kat: "Umum" }, { kat: "OMK" }];
+    const regs = [{ kat: "Umum", val: true }, { kat: "OMK", val: true }, { kat: "OMK", val: false }];
     expect(eventRp({ harga: 30000, hargaOmk: 20000 }, regs)).toBe(50000);
     expect(eventRp({ harga: 30000, hargaOmk: 0 }, regs)).toBe(60000);
   });
