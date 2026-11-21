@@ -15,6 +15,15 @@
   - Opsional: `APP_URL` (mis. https://e-pkk-one.vercel.app), `MAIL_FROM`.
   - Tanpa SMTP_USER/SMTP_PASS email dilewati, tetapi lonceng tetap bekerja.
 
+## WA untuk permintaan persetujuan
+Setiap permintaan persetujuan (user baru, program kerja, kegiatan SEP baru, permohonan pewarta luar kota) dikirim ke WA pribadi pemutusnya berisi link tindakan, selain muncul di lonceng.
+- Wajib terisi di Vercel (Production dan Preview): `BABLAST_API_KEY` (opsional `BABLAST_SENDER_CODE`, `BABLAST_API_URL`), `SMTP_USER`, `SMTP_PASS`, `APP_URL` (agar link di WA memakai alamat yang benar).
+- Penerima: user baru = Sekretariat dan Sekretaris; program kerja = Sekjen/Koordinator BPK; SEP baru = Tim SEP BPK (kegiatan dari PIC paroki berstatus "Menunggu Persetujuan" dan link pendaftaran mati sampai disetujui); pewarta luar kota = Sekretaris Jenderal. Nomor WA diambil dari data umat yang ditautkan ke akun.
+- Bila WA gagal karena sistem (kunci belum diisi atau BaBlast mati), email peringatan dikirim ke Sekretaris, Koordinator BPK, dan Sekretaris Jenderal, paling banyak satu kali per jam per jenis gagal.
+- **Webhook pewarta luar kota** (`POST /api/hook/luar-kota`): isi `HOOK_SECRET` (teks acak panjang) di Vercel. Panggil dengan header `x-webhook-secret: <HOOK_SECRET>` dan body `{"eventId":"rec..."}`. Dipanggil dari automation Airtable "e-PKK: email Sekjen saat ada permohonan pewarta luar kota baru" (di base SMP). Panggilan berulang untuk id yang sama hanya mengirim satu WA.
+- Opsi baru "Menunggu Persetujuan" dan "Ditolak" pada field Status SEP (tabel SEP Kegiatan) dibuat otomatis saat pertama dipakai.
+- Link langsung di WA: `/dashboard?proker=<id>`, `/dashboard?tab=kep`, `/dashboard?tab=luar`, `/dashboard?kelola=1` (kelola pengguna hanya terbuka otomatis untuk Superadmin).
+
 ## Menu Keuangan
 - Sumber data: base **Bendahara BPK Bandung** (`appD9GktbF32FT0uB`), tabel Mutasi, diinput bendahara. Dashboard hanya membaca; tidak ada tulis.
 - Token Airtable harus punya akses ke base tersebut (lihat langkah 2).
