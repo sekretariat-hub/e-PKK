@@ -6,6 +6,8 @@ import { hitungSisa } from "./realisasi";
 import { peranOf, rowsOf, semuaSeksi, seksiBidang, emailsWhere } from "./proker-roles";
 import { canAct, nextStatus, type Keputusan, type Tahap } from "./proker-flow";
 import { buatNotif } from "./notif";
+import { mintaApproval } from "./minta-approval";
+import { appUrl } from "./mail";
 import { hitungRingkas, type Ringkas } from "./proker-ringkas";
 
 const REC = /^rec[A-Za-z0-9]{14}$/;
@@ -102,7 +104,10 @@ export async function ajukanProgram(acc: Access, input: AjukanInput): Promise<{ 
       body: JSON.stringify({ records: baris.slice(i, i + 10).map((b) => ({ fields: { [AG.keterangan]: b.keterangan, [AG.programId]: id, [AG.jenis]: b.jenis, [AG.nominal]: b.nominal } })) }),
     });
   }
-  await buatNotif(await emailsWhere((r) => r.sekjen), `Program baru menunggu persetujuan Anda: ${nama} (${pilih.seksi})`, `proker:${id}`);
+  // Lonceng + WA ke pemutus tahap Sekjen. Gagal mengirim tidak membatalkan pengajuan.
+  try {
+    await mintaApproval({ jenis: "proker", penerima: await emailsWhere((r) => r.sekjen), pesan: `Program baru menunggu persetujuan Anda: ${nama} (${pilih.seksi})`, tautan: `proker:${id}`, url: `${appUrl()}/dashboard?proker=${id}` });
+  } catch (e) { console.error("mintaApproval proker", (e as Error)?.message); }
   return { id };
 }
 

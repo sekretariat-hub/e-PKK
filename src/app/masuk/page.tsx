@@ -4,9 +4,9 @@ import FormWa from "./FormWa";
 
 export const dynamic = "force-dynamic";
 
-export default async function Masuk({ searchParams }: { searchParams: Promise<{ kelola?: string; next?: string }> }) {
+export default async function Masuk({ searchParams }: { searchParams: Promise<{ kelola?: string; next?: string; proker?: string }> }) {
   const sp = await searchParams;
-  const dest = sp?.kelola === "1" ? "/dashboard?kelola=1" : /^\/absen(\/[A-Za-z0-9._-]+)?$/.test(sp?.next || "") ? (sp.next as string) : "/";
+  const dest = sp?.kelola === "1" ? "/dashboard?kelola=1" : /^rec[A-Za-z0-9]{14}$/.test(sp?.proker || "") ? "/dashboard?proker=" + sp.proker : /^\/absen(\/[A-Za-z0-9._-]+)?$/.test(sp?.next || "") ? (sp.next as string) : "/";
   return (
     <main className={s.bg}>
       <section className={s.card}>
