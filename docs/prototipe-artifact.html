@@ -3792,7 +3792,7 @@ function renderEvDetail(e, regs) {
   el._dims = dims;
   var pdNames = uniq(regs.map(function (p) { return p.pd; })).sort(cmpId);
   var hcnt = { hadir: 0, goshow: 0, belum: 0 }; regs.forEach(function (p) { var g = hadirGrup(p); if (hcnt[g] !== undefined) hcnt[g]++; });
-  var hkTabs = [["semua", "Semua", regs.length], ["hadir", "Hadir", hcnt.hadir], ["belum", "Belum hadir", hcnt.belum], ["goshow", "Go show", hcnt.goshow]];
+  var hkTabs = [["semua", "Semua", regs.length], ["hadir", "Hadir", hcnt.hadir + hcnt.goshow], ["belum", "Belum hadir", hcnt.belum], ["goshow", "Go show", hcnt.goshow]];
   h += pane("daftar", '<div id="evDimChip"></div><div class="chips" id="evHkChips" role="group" aria-label="Filter kehadiran" style="margin-bottom:10px">' + hkTabs.map(function (t) {
       return '<button type="button" class="chip" data-hk="' + t[0] + '" aria-pressed="' + ((EV.hk || "semua") === t[0]) + '">' + t[1] + " <em>" + t[2] + "</em></button>";
     }).join("") + "</div>" + '<div class="fil"><input type="search" id="evRq" placeholder="Cari nama pendaftar" autocomplete="off" aria-label="Cari pendaftar" value="' + esc(EV.rq) + '"><select id="evPd" aria-label="Filter PD"><option value="">Semua PD</option>' +
@@ -3819,13 +3819,15 @@ function renderEvDetail(e, regs) {
   if (tab === "seksi") { if (SK.eid === e.id && SK.data) skDraw(e.id); else skLoad(e.id, e.tgl < TODAY ? "hadir" : "daftar"); }
   renderEvRegs();
 }
-/* kelompok kehadiran pendaftar: Hadir (terdaftar lalu hadir), Go show (daftar di hari acara), Belum hadir */
+/* kelompok kehadiran pendaftar: hadir, goshow (daftar di hari acara), belum */
 function hadirGrup(p) {
   var t = String(p.hadir || "");
   if (/belum/i.test(t)) return "belum";
   if (/go\s*show/i.test(t)) return "goshow";
   return /hadir/i.test(t) ? "hadir" : "lain";
 }
+/* "Hadir" mencakup Go show; "Go show" hanya yang daftar di hari acara */
+function hadirCocok(p, k) { var g = hadirGrup(p); return k === "hadir" ? g === "hadir" || g === "goshow" : g === k; }
 function setEvBk(k) {
   var el = document.getElementById("evDetail"); if (!el) return;
   EV.bk = k;
@@ -3848,7 +3850,7 @@ function renderEvRegs() {
   var el = document.getElementById("evDetail"), box = document.getElementById("evRegs");
   if (!box || !el._regs) return;
   var q = EV.rq.toLowerCase(), dm = EV.dim >= 0 && el._dims ? el._dims[EV.dim] : null; var hk = EV.hk || "semua";
-  var l = el._regs.filter(function (p) { return (!EV.pdf || p.pd === EV.pdf) && (!q || (p.nama + " " + pgl(p.nama)).toLowerCase().indexOf(q) >= 0) && (!dm || (dm[1](p) || "Belum diisi") === EV.dv) && (hk === "semua" || hadirGrup(p) === hk); }).sort(function (a, b) { return cmpId(a.nama, b.nama); });
+  var l = el._regs.filter(function (p) { return (!EV.pdf || p.pd === EV.pdf) && (!q || (p.nama + " " + pgl(p.nama)).toLowerCase().indexOf(q) >= 0) && (!dm || (dm[1](p) || "Belum diisi") === EV.dv) && (hk === "semua" || hadirCocok(p, hk)); }).sort(function (a, b) { return cmpId(a.nama, b.nama); });
   var chip = document.getElementById("evDimChip");
   if (chip) chip.innerHTML = dm ? '<p class="count"><span class="tag">Filter: ' + esc(dm[0]) + " = " + esc(EV.dv) + '</span> <button type="button" class="btn" data-evclr="1">Hapus filter ✕</button></p>' : "";
   Array.prototype.forEach.call(el.querySelectorAll(".hbr[data-dim]"), function (x) { x.classList.toggle("on", !!dm && +x.dataset.dim === EV.dim && x.dataset.val === EV.dv); });
