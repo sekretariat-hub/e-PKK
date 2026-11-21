@@ -3189,7 +3189,7 @@ function renderLuar() {
   document.getElementById("luDest").innerHTML = all.dest.sort(function (a, b) { return b.n - a.n; }).slice(0, 8).map(function (d) { return '<button type="button" class="li w2" data-pdn="' + esc(d.pd) + '"><span><span class="nm">' + esc(d.pd) + '</span><span class="mt">' + Object.keys(d.pw).length + ' pewarta berbeda</span></span><span class="rt"><span class="pill ok">' + d.n + "×</span></span></button>"; }).join("") || '<p class="hint">Belum ada data.</p>';
   document.getElementById("luCount").textContent = "Menampilkan " + gs.length + " pewarta luar kota";
   document.getElementById("luNone").hidden = gs.length > 0;
-  tb.innerHTML = gs.map(function (x) {
+  tb.innerHTML = gs.slice().sort(function (a, b) { return cmpId(a.asal, b.asal) || cmpId(a.nama, b.nama); }).map(function (x) {
     var pds = Object.keys(x.pds).sort(function (a, b) { return x.pds[b] - x.pds[a]; });
     return '<tr class="pdrow" data-lu="' + esc(x.key) + '"><td class="nama"><button type="button" class="linkbtn" data-lu="' + esc(x.key) + '">' + esc(x.nama) + '</button></td><td>' + esc(x.asal) + '</td><td style="font-variant-numeric:tabular-nums">' + x.n + "×" + (x.nf ? ' <span class="note">+' + x.nf + " terjadwal</span>" : "") + "</td><td>" + esc(x.last ? fmtDate(x.last, { day: "numeric", month: "short", year: "numeric" }) : "-") + "</td><td>" + esc(pds.slice(0, 3).join(", ")) + (pds.length > 3 ? ' <span class="note">+' + (pds.length - 3) + " lagi</span>" : "") + "</td></tr>";
   }).join("");
