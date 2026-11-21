@@ -3778,7 +3778,7 @@ function renderEvDetail(e, regs) {
   h += '<div class="evact">' + (e.tgl === TODAY ? '<span class="tag live" data-live-b="' + esc(e.id) + '">● Live</span>' : "") +
     '<button type="button" class="chip" data-absen="' + esc(e.id) + '"' + (va ? " disabled" : "") + '>Link absensi</button></div></div>' +
     '<p class="note" id="absenMsg">' + (va ? "Tidak tersedia di mode Lihat sebagai. Kembali ke akun Anda untuk membuat link." : "") + "</p>";
-  h += '<div class="tiles sm">' + tile(regs.length, "Pendaftar", batal ? batal + " batal tidak dihitung" : "aktif") + tile(done.length + "/" + pdActive.length, "PD mendaftar", miss.length + " PD belum") + tile(bayar, "Confirmed / Paid", "divalidasi: " + vald) + "</div>";
+  h += '<div class="tiles sm">' + tile(regs.length, "Pendaftar", batal ? batal + " batal tidak dihitung" : "aktif") + tile(done.length + "/" + pdActive.length, "PD mendaftar", miss.length + " PD belum") + tile(evRpText(EVRP[e.id] && EVRP[e.id].v), "Confirmed / Paid", evRpSub(EVRP[e.id] && EVRP[e.id].v, vald)).replace('<div class="tile">', '<div class="tile" data-evrp="' + esc(e.id) + '">') + "</div>";
   var tabs = [["daftar", "Pendaftar", regs.length], ["demo", "Demografi"], ["pd", "Per PD", done.length], ["belum", "Belum mendaftar", miss.length], ["seksi", "Per seksi"]];
   h += '<div class="evtabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-evtab="' + t[0] + '"' + (t[0] === "seksi" ? ' title="Laporan perwakilan per seksi"' : "") + ' aria-selected="' + (tab === t[0]) + '">' + t[1] + (t[2] !== undefined ? " <em>" + t[2] + "</em>" : "") + "</button>"; }).join("") + "</div>";
   var pane = function (k, inner) { return '<div class="evpane" data-evpane="' + k + '"' + (tab === k ? "" : " hidden") + ">" + inner + "</div>"; };
@@ -3817,6 +3817,7 @@ function renderEvDetail(e, regs) {
   el.innerHTML = h;
   el._regs = regs;
   el._eid = e.id;
+  loadEvRp(e.id, vald);
   if (tab === "seksi") { if (SK.eid === e.id && SK.data) skDraw(e.id); else skLoad(e.id, e.tgl < TODAY ? "hadir" : "daftar"); }
   renderEvRegs();
 }
@@ -3829,6 +3830,25 @@ function hadirGrup(p) {
 }
 /* "Hadir" mencakup Go show; "Go show" hanya yang daftar di hari acara */
 function hadirCocok(p, k) { var g = hadirGrup(p); return k === "hadir" ? g === "hadir" || g === "goshow" : g === k; }
+/* tile Confirmed / Paid: nilai rupiah uang masuk pendaftar dari Mutasi (base Bendahara); server hanya mengizinkan yang berhak Keuangan */
+var EVRP = {};
+function rpFmt(n) { return "Rp" + Math.round(n).toLocaleString("id-ID"); }
+function evRpText(c) { return c === undefined ? "…" : c === null ? "–" : rpFmt(c.total); }
+function evRpSub(c, vald) { return c === undefined ? "memuat uang masuk · divalidasi: " + vald : c === null ? "nominal hanya untuk Bendahara dan pimpinan · divalidasi: " + vald : (c.tercatat ? "uang masuk · " + c.jumlah + " transaksi" : "belum ada uang masuk tercatat") + " · divalidasi: " + vald; }
+function paintEvRp(id, vald) {
+  var t = document.querySelector('[data-evrp="' + id + '"]'); if (!t) return;
+  var c = EVRP[id] && EVRP[id].v; t.querySelector("b").textContent = evRpText(c); t.querySelector("small").textContent = evRpSub(c, vald);
+}
+function loadEvRp(id, vald) {
+  var c = EVRP[id];
+  if (c && (c.busy || Date.now() - c.at < 60000)) { paintEvRp(id, vald); return; }
+  EVRP[id] = { at: Date.now(), busy: true, v: c ? c.v : undefined };
+  fetch("/api/event-uangmasuk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ event: id }) })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .catch(function () { return null; })
+    .then(function (j) { EVRP[id] = { at: Date.now(), busy: false, v: j && typeof j.total === "number" ? j : null }; paintEvRp(id, vald); });
+  paintEvRp(id, vald);
+}
 function setEvBk(k) {
   var el = document.getElementById("evDetail"); if (!el) return;
   EV.bk = k;
