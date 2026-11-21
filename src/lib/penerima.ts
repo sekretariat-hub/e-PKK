@@ -7,6 +7,8 @@ const UMAT_WA = "fldzY1Z2QvIIEkYXR";
 
 /** Penerima WA persetujuan user baru: hanya Ketua Sekretariat (permintaan pemilik, 2026-11-21). Dicocokkan per jabatan, bukan alamat email. */
 export const RE_APPROVER_USER = /^ketua sekretariat$/i;
+/** Penerima WA untuk SEMUA permintaan persetujuan (user baru, program kerja, SEP, pewarta luar kota): hanya Ketua Sekretariat (permintaan pemilik, 2026-11-21). Lonceng tetap ke pemutus masing-masing. */
+export const RE_WA_APPROVAL = RE_APPROVER_USER;
 /** Penerima email peringatan WA gagal: Sekretaris, Sekretaris Jenderal (termasuk ejaan "Jendral"), dan Koordinator BPK. */
 export const RE_ALERT = /^(sekretaris|sekretaris jende?ral|koordinator|koordinator bpkpkk bandung)$/i;
 
