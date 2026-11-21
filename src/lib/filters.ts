@@ -24,6 +24,13 @@ export function evalFilter(f: any, fields: Record<string, any>): boolean {
     case "doesNotContain": return !textOf(v).toLowerCase().includes(String(val ?? "").toLowerCase());
     case "=": return textOf(v).toLowerCase() === String(val ?? "").toLowerCase();
     case "!=": return textOf(v).toLowerCase() !== String(val ?? "").toLowerCase();
+    case "hasAnyOf":
+    case "hasAllOf": {
+      // Field tautan: nilai berupa array id mentah atau {id,name}. Operand kedua = daftar id rekaman.
+      const have = new Set((Array.isArray(v) ? v : []).map((x: any) => (x && typeof x === "object" ? x.id : x)));
+      const want: any[] = Array.isArray(val) ? val : [];
+      return op === "hasAnyOf" ? want.some((w) => have.has(w)) : want.length > 0 && want.every((w) => have.has(w));
+    }
     default: throw new Error("operator filter tidak didukung: " + op);
   }
 }
