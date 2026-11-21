@@ -19,3 +19,8 @@ it("link ?tab=kep: hanya untuk akun yang punya tab KEP", () => {
   expect(me(renderDashboard(acc, false, null, "", "kep")).openTab).toBe("");
   expect(me(renderDashboard({ ...acc, tabs: ["KEP"] }, false, null, "", "lain")).openTab).toBe("");
 });
+
+it("link ?tab=luar: hanya untuk akun dengan tab Pewarta luar kota", () => {
+  expect(me(renderDashboard({ ...acc, tabs: ["Pewarta luar kota"] }, false, null, "", "luar")).openTab).toBe("luar");
+  expect(me(renderDashboard(acc, false, null, "", "luar")).openTab).toBe("");
+});

@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const kelola = url.searchParams.get("kelola") === "1";
   const proker = /^rec[A-Za-z0-9]{14}$/.test(url.searchParams.get("proker") || "") ? (url.searchParams.get("proker") as string) : "";
-  const tab = url.searchParams.get("tab") === "kep" ? "kep" : "";
+  const tab = ["kep", "luar"].includes(url.searchParams.get("tab") || "") ? (url.searchParams.get("tab") as string) : "";
   if (!email) return NextResponse.redirect(new URL(kelola ? "/masuk?kelola=1" : proker ? "/masuk?proker=" + proker : tab ? "/masuk?tab=" + tab : "/masuk", req.url));
   const { acc } = await effectiveAccess(email, (await cookies()).get(AS_COOKIE)?.value);
   if (!acc || acc.status !== "Disetujui" || !acc.tabs.length) return NextResponse.redirect(new URL("/", req.url));

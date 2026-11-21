@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Masuk({ searchParams }: { searchParams: Promise<{ kelola?: string; next?: string; proker?: string; tab?: string }> }) {
   const sp = await searchParams;
-  const dest = sp?.kelola === "1" ? "/dashboard?kelola=1" : /^rec[A-Za-z0-9]{14}$/.test(sp?.proker || "") ? "/dashboard?proker=" + sp.proker : sp?.tab === "kep" ? "/dashboard?tab=kep" : /^\/absen(\/[A-Za-z0-9._-]+)?$/.test(sp?.next || "") ? (sp.next as string) : "/";
+  const dest = sp?.kelola === "1" ? "/dashboard?kelola=1" : /^rec[A-Za-z0-9]{14}$/.test(sp?.proker || "") ? "/dashboard?proker=" + sp.proker : sp?.tab === "kep" || sp?.tab === "luar" ? "/dashboard?tab=" + sp.tab : /^\/absen(\/[A-Za-z0-9._-]+)?$/.test(sp?.next || "") ? (sp.next as string) : "/";
   return (
     <main className={s.bg}>
       <section className={s.card}>
